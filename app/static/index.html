@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Unionism Network</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="title">Unionism Network (MVP)</div>
+      <div class="controls">
+        <label>
+          Year
+          <input id="year" type="range" min="1817" max="1865" step="1" value="1832" />
+          <span id="yearLabel">1832</span>
+        </label>
+        <label>
+          Issue
+          <select id="issue"></select>
+        </label>
+        <label>
+          Scale
+          <select id="scale">
+            <option value="">(any)</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panelHeader">Map</div>
+        <div id="map" class="map"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panelHeader">Network</div>
+        <svg id="network" class="network" role="img" aria-label="Unionism network"></svg>
+      </section>
+
+      <section class="panel details">
+        <div class="panelHeader">Details</div>
+        <div id="details" class="detailsBody">
+          <div class="muted">Click a person or edge.</div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

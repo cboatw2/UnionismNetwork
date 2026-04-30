@@ -51,6 +51,50 @@ Helpful shell commands:
 .mode column
 ```
 
+## Interactive web app (MVP)
+
+This repo now includes a minimal local web app:
+
+- FastAPI server that queries `unionism.db`
+- linked Leaflet map + D3 network UI
+- year slider (1817–1865) + issue selector + scale filter
+
+### 1) Initialize a local SQLite database
+
+Create `unionism.db` from the schema + lookup seeds:
+
+```bash
+./.venv/bin/python scripts/init_db.py
+```
+
+Optional (demo-only): load the MVP demo seed to get your Phase-1 roster + key places on the map immediately:
+
+```bash
+sqlite3 unionism.db < seed_mvp_demo.sql
+```
+
+Optional: load the example inserts in `entry_template.sql`:
+
+```bash
+sqlite3 unionism.db < entry_template.sql
+```
+
+### 2) Run the server
+
+```bash
+./.venv/bin/python -m uvicorn app.main:app --reload --port 8000
+```
+
+Open:
+
+- http://127.0.0.1:8000/
+
+API endpoints:
+
+- `GET /api/health`
+- `GET /api/meta`
+- `GET /api/state?year=1832&issue=nullification` (optional `scale=`)
+
 ## Suggested first workflow
 
 1. Add a source in `sources`.
