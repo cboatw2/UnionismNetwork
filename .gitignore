@@ -7,3 +7,5 @@ __pycache__/
 .DS_Store
 unionism.db
 *.db
+*.db.bak*
+*.bak_*

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Unionism Network</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/styles.css?v=3" />
   </head>
   <body>
     <header class="topbar">
@@ -35,8 +35,14 @@
         <div id="map" class="map"></div>
       </section>
 
-      <section class="panel">
-        <div class="panelHeader">Network</div>
+      <section class="panel" id="networkPanel">
+        <div class="panelHeader">
+          <span>Network</span>
+          <span class="panelActions">
+            <button type="button" id="networkFit" class="panelBtn" title="Fit network to view">Fit</button>
+            <button type="button" id="networkExpand" class="panelBtn" title="Expand network to fullscreen">Expand</button>
+          </span>
+        </div>
         <svg id="network" class="network" role="img" aria-label="Unionism network"></svg>
       </section>
 
@@ -50,6 +56,6 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=3"></script>
   </body>
 </html>

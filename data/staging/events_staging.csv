@@ -1,0 +1,6 @@
+event_id,event_name,event_type_code,start_date,end_date,place_id,place_name,place_type_code,description
+,Compromise Tariff of 1833,political_crisis,1833-03-02,,,,,Key de-escalation after Nullification.
+,Compromise of 1850,political_crisis,1850-09-09,,,,,Series of measures; use date as anchor.
+,Kansas-Nebraska Act,political_crisis,1854-05-30,,,,,Reopens slavery expansion debate.
+,Election of 1860,election,1860-11-06,,,,,Lincoln elected; immediate sectional crisis.
+,South Carolina Secession Convention,political_crisis,1860-12-17,1860-12-20,,Columbia,town,Convention that adopted secession ordinance.

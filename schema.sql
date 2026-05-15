@@ -309,6 +309,22 @@ CREATE INDEX IF NOT EXISTS idx_positions_issue ON positions(issue_category_code)
 CREATE INDEX IF NOT EXISTS idx_positions_dates ON positions(date_start, date_end);
 CREATE INDEX IF NOT EXISTS idx_positions_confidence ON positions(confidence_score);
 
+-- Composite indexes that match the API's most common filtering patterns.
+CREATE INDEX IF NOT EXISTS idx_positions_person_issue_dates
+	ON positions(person_id, issue_category_code, date_start, date_end);
+
+CREATE INDEX IF NOT EXISTS idx_relchar_rel_issue_scale_dates
+	ON relationship_characterizations(relationship_id, issue_category_code, scale_level_code, date_start, date_end);
+
+CREATE INDEX IF NOT EXISTS idx_residence_person_dates
+	ON person_place_residence(person_id, date_start, date_end);
+
+CREATE INDEX IF NOT EXISTS idx_relationships_type_dates
+	ON relationships(relationship_type_code, start_date, end_date);
+
+CREATE INDEX IF NOT EXISTS idx_people_display_name ON people(display_name);
+CREATE INDEX IF NOT EXISTS idx_places_parent ON places(parent_place_id);
+
 CREATE INDEX IF NOT EXISTS idx_residence_person ON person_place_residence(person_id);
 CREATE INDEX IF NOT EXISTS idx_residence_place ON person_place_residence(place_id);
 

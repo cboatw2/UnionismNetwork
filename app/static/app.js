@@ -62,6 +62,8 @@ function renderMap(nodes) {
 // --- Network ---
 const svg = d3.select('#network');
 let sim = null;
+let zoomBehavior = null;
+let zoomRoot = null; // <g> that zoom/pan transforms apply to
 
 function svgSize() {
   const rect = document.getElementById('network').getBoundingClientRect();
@@ -91,7 +93,10 @@ function renderNetwork(nodes, edges) {
     .filter(e => nodeById.has(e.source) && nodeById.has(e.target))
     .map(e => ({ ...e }));
 
-  const link = svg.append('g')
+  // Single <g> that holds everything so zoom/pan transforms it as one.
+  zoomRoot = svg.append('g').attr('class', 'zoomRoot');
+
+  const link = zoomRoot.append('g')
     .attr('stroke-opacity', 0.7)
     .selectAll('line')
     .data(graphEdges)
@@ -103,7 +108,7 @@ function renderNetwork(nodes, edges) {
       selectEdge(d.relationship_id);
     });
 
-  const node = svg.append('g')
+  const node = zoomRoot.append('g')
     .selectAll('circle')
     .data(graphNodes)
     .join('circle')
@@ -157,6 +162,40 @@ function renderNetwork(nodes, edges) {
     selectedEdgeId = null;
     render();
   });
+
+  // Zoom & pan (mouse wheel + drag on empty space).
+  zoomBehavior = d3.zoom()
+    .scaleExtent([0.1, 8])
+    .filter((event) => {
+      // Allow wheel always; allow drag-pan only when starting on empty SVG background,
+      // so node-drag (which uses pointerdown on circles) still works.
+      if (event.type === 'wheel') return true;
+      return event.target === svg.node();
+    })
+    .on('zoom', (event) => {
+      zoomRoot.attr('transform', event.transform);
+    });
+  svg.call(zoomBehavior).on('dblclick.zoom', null);
+}
+
+// Fit the current graph to the viewport.
+function fitNetwork() {
+  if (!zoomRoot || !zoomBehavior) return;
+  const { width, height } = svgSize();
+  const bbox = zoomRoot.node().getBBox();
+  if (!bbox.width || !bbox.height) return;
+  const pad = 24;
+  const scale = Math.min(
+    (width - pad * 2) / bbox.width,
+    (height - pad * 2) / bbox.height,
+    4
+  );
+  const tx = (width - bbox.width * scale) / 2 - bbox.x * scale;
+  const ty = (height - bbox.height * scale) / 2 - bbox.y * scale;
+  svg.transition().duration(400).call(
+    zoomBehavior.transform,
+    d3.zoomIdentity.translate(tx, ty).scale(scale)
+  );
 }
 
 // --- Details ---
@@ -323,6 +362,29 @@ function wireControls() {
   window.addEventListener('resize', () => {
     render();
   });
+
+  const fitBtn = document.getElementById('networkFit');
+  if (fitBtn) fitBtn.addEventListener('click', fitNetwork);
+
+  const expandBtn = document.getElementById('networkExpand');
+  const networkPanel = document.getElementById('networkPanel');
+  if (expandBtn && networkPanel) {
+    expandBtn.addEventListener('click', () => {
+      const expanded = networkPanel.classList.toggle('expanded');
+      expandBtn.textContent = expanded ? 'Collapse' : 'Expand';
+      expandBtn.classList.toggle('active', expanded);
+      // Re-render at the new size so the simulation uses the larger viewport.
+      render();
+      // After layout settles, fit to the new viewport.
+      setTimeout(fitNetwork, 350);
+    });
+    // Allow Escape to collapse when expanded.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && networkPanel.classList.contains('expanded')) {
+        expandBtn.click();
+      }
+    });
+  }
 }
 
 (async function main() {

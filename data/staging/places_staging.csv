@@ -1,0 +1,8 @@
+place_id,place_name,place_type_code,parent_place_id,parent_place_name,parent_place_type_code,latitude,longitude,region_sc_code,modern_state,notes
+,United States,nation,,,,,,,,
+,South Carolina,state,,United States,nation,,,,,SC,
+,Charleston,town,,South Carolina,state,,,lowcountry,SC,
+,Columbia,town,,South Carolina,state,,,midlands,SC,
+,Greenville,town,,South Carolina,state,,,upcountry,SC,
+,Pendleton,town,,South Carolina,state,,,upcountry,SC,
+,Washington,town,,United States,nation,,,outside_sc,,
