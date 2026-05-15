@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Unionism Network — Data Entry</title>
+    <link rel="stylesheet" href="/static/styles.css?v=3" />
+    <link rel="stylesheet" href="/static/entry.css?v=2" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="title">Unionism Network — Data Entry</div>
+      <div class="controls">
+        <a href="/" class="panelBtn" style="text-decoration:none;">← Back to visualization</a>
+      </div>
+    </header>
+
+    <div class="entryTabs">
+      <button type="button" class="tabBtn active" data-tab="person">Person</button>
+      <button type="button" class="tabBtn" data-tab="source">Source</button>
+      <button type="button" class="tabBtn" data-tab="position">Political Position</button>
+      <button type="button" class="tabBtn" data-tab="alias">Alias</button>
+    </div>
+
+    <div class="entryStatus" id="entryStatus" role="status" aria-live="polite"></div>
+
+    <div id="dupeDialog" class="dupeDialog hidden" role="dialog" aria-modal="true">
+      <div class="dupeBox">
+        <div class="dupeHeader">
+          <strong>Possible duplicate(s) found</strong>
+          <button type="button" class="panelBtn" id="dupeClose">×</button>
+        </div>
+        <div class="dupeBody">
+          <p class="muted">
+            One or more existing people in <code>unionism.db</code> match the name you entered.
+            Pick one to <strong>merge into</strong> (only blank fields will be filled; notes are appended),
+            or create a new record anyway.
+          </p>
+          <div id="dupeCandidates" class="dupeCandidates"></div>
+          <div class="dupeActions">
+            <button type="button" class="panelBtn" id="dupeCreateAnyway">Create new anyway</button>
+            <button type="button" class="panelBtn" id="dupeCancel">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <main class="entryMain">
+      <!-- =============== PERSON ============== -->
+      <section class="entryPanel" data-panel="person">
+        <h2>Person <span class="muted">— biographical info</span></h2>
+
+        <div class="formRow">
+          <label>
+            Existing person (optional, to edit)
+            <select id="personPicker">
+              <option value="">— Create new —</option>
+            </select>
+          </label>
+        </div>
+
+        <form id="personForm" class="entryForm">
+          <div class="formGrid">
+            <label>Full name<input name="full_name" required /></label>
+            <label>Display name<input name="display_name" /></label>
+            <label>Birth year<input name="birth_year" type="number" min="1500" max="2100" /></label>
+            <label>Death year<input name="death_year" type="number" min="1500" max="2100" /></label>
+            <label>Gender<input name="gender" placeholder="e.g. M, F" /></label>
+            <label>Occupation<input name="occupation" /></label>
+
+            <label>Race<select name="race_code" data-lookup="race"><option value=""></option></select></label>
+            <label>Class<select name="class_code" data-lookup="class_status"><option value=""></option></select></label>
+            <label>Home region (SC)<select name="home_region_sc_code" data-lookup="region_sc"><option value=""></option></select></label>
+            <label>Source density<select name="source_density_code" data-lookup="source_density"><option value=""></option></select></label>
+            <label>Representation depth<select name="representation_depth_code" data-lookup="representation_depth"><option value=""></option></select></label>
+            <label>Enslaved status<input name="enslaved_status" placeholder="free / enslaved / unknown" /></label>
+
+            <label class="checkboxRow">
+              <input name="erasure_flag" type="checkbox" value="1" />
+              Erasure flag
+            </label>
+            <label>Erasure reason<select name="erasure_reason_code" data-lookup="erasure_reason"><option value=""></option></select></label>
+          </div>
+
+          <label class="fullWidth">Notes
+            <textarea name="notes" rows="3"></textarea>
+          </label>
+
+          <div class="formActions">
+            <button type="submit" class="primaryBtn">Save person</button>
+            <button type="reset" class="panelBtn">Reset</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- =============== SOURCE ============== -->
+      <section class="entryPanel hidden" data-panel="source">
+        <h2>Source <span class="muted">— citation / archive record</span></h2>
+
+        <form id="sourceForm" class="entryForm">
+          <div class="formGrid">
+            <label>Source type *<select name="source_type_code" data-lookup="source_type" required><option value=""></option></select></label>
+            <label>Title *<input name="title" required /></label>
+            <label>Creator (author)<input name="creator" /></label>
+            <label>Date created<input name="date_created" placeholder="YYYY or YYYY-MM-DD" /></label>
+            <label>Archive<input name="archive" /></label>
+            <label>Collection<input name="collection" /></label>
+            <label>Box/folder<input name="box_folder" /></label>
+            <label>URL<input name="url" type="url" /></label>
+          </div>
+
+          <label class="fullWidth">Full citation
+            <textarea name="citation_full" rows="2"></textarea>
+          </label>
+          <label class="fullWidth">Notes
+            <textarea name="notes" rows="2"></textarea>
+          </label>
+
+          <div class="formActions">
+            <button type="submit" class="primaryBtn">Save source</button>
+            <button type="reset" class="panelBtn">Reset</button>
+          </div>
+        </form>
+
+        <div class="formRow">
+          <details>
+            <summary>Recent sources</summary>
+            <div id="recentSources" class="recentList"></div>
+          </details>
+        </div>
+      </section>
+
+      <!-- =============== POSITION ============== -->
+      <section class="entryPanel hidden" data-panel="position">
+        <h2>Political Position <span class="muted">— stance on an issue, with required source</span></h2>
+
+        <form id="positionForm" class="entryForm">
+          <div class="formGrid">
+            <label>Person *<select name="person_id" id="positionPerson" required><option value=""></option></select></label>
+            <label>Issue category *<select name="issue_category_code" data-lookup="issue_category" required><option value=""></option></select></label>
+            <label>Position label *<select name="position_label_code" data-lookup="position_label" required><option value=""></option></select></label>
+            <label>Scale level *<select name="scale_level_code" data-lookup="scale_level" required><option value=""></option></select></label>
+
+            <label>Date start<input name="date_start" placeholder="YYYY or YYYY-MM-DD" /></label>
+            <label>Date end<input name="date_end" placeholder="YYYY or YYYY-MM-DD" /></label>
+
+            <label>Region relevance<select name="region_relevance_code" data-lookup="region_sc"><option value=""></option></select></label>
+            <label>Ideology score (−1…1)<input name="ideology_score" type="number" step="0.01" min="-1" max="1" /></label>
+
+            <label>Stance on Union (−1…1)<input name="stance_on_union" type="number" step="0.01" min="-1" max="1" /></label>
+            <label>Stance on states' rights (−1…1)<input name="stance_on_states_rights" type="number" step="0.01" min="-1" max="1" /></label>
+            <label>Stance on slavery (−1…1)<input name="stance_on_slavery" type="number" step="0.01" min="-1" max="1" /></label>
+            <label>Stance on secession (−1…1)<input name="stance_on_secession" type="number" step="0.01" min="-1" max="1" /></label>
+
+            <label>Claim type *<select name="claim_type_code" data-lookup="claim_type" required><option value=""></option></select></label>
+            <label>Confidence *<select name="confidence_score" data-lookup="confidence_score" required><option value=""></option></select></label>
+            <label>Evidence type *<select name="evidence_type_code" data-lookup="evidence_type" required><option value=""></option></select></label>
+            <label>Source *<select name="source_id" id="positionSource" required><option value=""></option></select></label>
+
+            <label class="checkboxRow">
+              <input name="counterevidence_present" type="checkbox" value="1" />
+              Counterevidence present
+            </label>
+          </div>
+
+          <label class="fullWidth">Justification note *
+            <textarea name="justification_note" rows="3" required placeholder="Why this coding? Quote or paraphrase the evidence."></textarea>
+          </label>
+          <label class="fullWidth">Interpretive note
+            <textarea name="interpretive_note" rows="2"></textarea>
+          </label>
+
+          <div class="formActions">
+            <button type="submit" class="primaryBtn">Save position</button>
+            <button type="reset" class="panelBtn">Reset</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- =============== ALIAS ============== -->
+      <section class="entryPanel hidden" data-panel="alias">
+        <h2>Alias <span class="muted">— alternate name for a person</span></h2>
+
+        <form id="aliasForm" class="entryForm">
+          <div class="formGrid">
+            <label>Person *<select name="person_id" id="aliasPerson" required><option value=""></option></select></label>
+            <label>Alias name *<input name="alias_name" required /></label>
+            <label>Source (optional)<select name="source_id" id="aliasSource"><option value=""></option></select></label>
+          </div>
+          <label class="fullWidth">Notes<textarea name="notes" rows="2"></textarea></label>
+          <div class="formActions">
+            <button type="submit" class="primaryBtn">Save alias</button>
+            <button type="reset" class="panelBtn">Reset</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <script src="/static/entry.js?v=2"></script>
+  </body>
+</html>

@@ -1,0 +1,171 @@
+.entryTabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px 0;
+  border-bottom: 1px solid var(--border);
+  background: #0d0f14;
+}
+
+.tabBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  font-size: 13px;
+}
+.tabBtn:hover { color: var(--text); }
+.tabBtn.active {
+  background: var(--panel);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.entryStatus {
+  padding: 8px 16px;
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 1.6em;
+}
+.entryStatus.ok { color: #46d369; }
+.entryStatus.err { color: #ff6b6b; }
+
+.entryMain {
+  padding: 12px 16px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.entryPanel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+.entryPanel.hidden { display: none; }
+.entryPanel h2 { margin: 0 0 12px; font-size: 16px; }
+
+.entryForm { display: flex; flex-direction: column; gap: 12px; }
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+@media (min-width: 900px) {
+  .formGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.entryForm label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: var(--muted);
+  gap: 4px;
+}
+
+.entryForm input,
+.entryForm select,
+.entryForm textarea {
+  background: #0d0f14;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.entryForm textarea { resize: vertical; }
+
+.entryForm .fullWidth { grid-column: 1 / -1; }
+
+.checkboxRow { flex-direction: row !important; align-items: center; gap: 8px !important; color: var(--text) !important; }
+
+.formRow { margin: 10px 0; }
+
+.formActions { display: flex; gap: 10px; justify-content: flex-end; }
+
+.primaryBtn {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #fff;
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.primaryBtn:hover { filter: brightness(1.1); }
+
+.recentList {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  max-height: 220px;
+  overflow: auto;
+}
+.recentList .row {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Duplicate-check dialog */
+.dupeDialog {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 2000;
+  padding: 40px 16px;
+  overflow: auto;
+}
+.dupeDialog.hidden { display: none; }
+.dupeBox {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  max-width: 720px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+.dupeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.dupeBody { padding: 12px 14px; }
+.dupeCandidates {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 14px;
+}
+.dupeCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0d0f14;
+}
+.dupeCard .meta { font-size: 12px; color: var(--muted); }
+.dupeCard .name { color: var(--text); font-weight: 600; }
+.dupeCard .badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #1a1f2b;
+  color: var(--muted);
+  margin-left: 6px;
+}
+.dupeCard .badge.warn { background: #4a2a2a; color: #ffb3b3; }
+.dupeActions { display: flex; gap: 8px; justify-content: flex-end; }
