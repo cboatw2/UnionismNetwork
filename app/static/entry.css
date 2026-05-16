@@ -169,3 +169,18 @@
 }
 .dupeCard .badge.warn { background: #4a2a2a; color: #ffb3b3; }
 .dupeActions { display: flex; gap: 8px; justify-content: flex-end; }
+
+
+.entryFieldset {
+  border: 1px solid var(--border, #2a2f3a);
+  border-radius: 6px;
+  padding: 10px 14px 14px;
+  margin: 0 0 14px;
+  background: rgba(255,255,255,0.02);
+}
+.entryFieldset legend {
+  padding: 0 6px;
+  font-weight: 600;
+  color: var(--text, #e8e8ea);
+}
+

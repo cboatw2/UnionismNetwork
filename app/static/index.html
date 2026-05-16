@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Unionism Network</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/static/styles.css?v=3" />
+    <link rel="stylesheet" href="/static/styles.css?v=4" />
   </head>
   <body>
     <header class="topbar">
@@ -26,6 +26,26 @@
           <select id="scale">
             <option value="">(any)</option>
           </select>
+        </label>
+        <label>
+          Search
+          <input id="search" type="search" placeholder="name…" autocomplete="off" />
+        </label>
+        <label class="checkboxRow">
+          <input id="filterCoded" type="checkbox" />
+          Coded people only
+        </label>
+        <label class="checkboxRow">
+          <input id="filterHideCoMentions" type="checkbox" checked />
+          Hide co-mentions
+        </label>
+        <label class="checkboxRow">
+          <input id="filterFocus" type="checkbox" checked />
+          Focus on selected
+        </label>
+        <label class="checkboxRow">
+          <input id="showLabels" type="checkbox" />
+          Show all labels
         </label>
       </div>
     </header>
@@ -57,6 +77,6 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-    <script src="/static/app.js?v=3"></script>
+    <script src="/static/app.js?v=5"></script>
   </body>
 </html>

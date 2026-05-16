@@ -6,6 +6,7 @@ const statusEl = document.getElementById('entryStatus');
 let lookups = {};
 let people = [];
 let sources = [];
+let events = [];
 
 function setStatus(msg, kind) {
   statusEl.textContent = msg || '';
@@ -14,7 +15,13 @@ function setStatus(msg, kind) {
 }
 
 function clearStatusSoon() {
-  setTimeout(() => setStatus(''), 4000);
+  // Only auto-clear successful or neutral status. Errors stay visible until
+  // the next status replaces them.
+  setTimeout(() => {
+    if (!statusEl.classList.contains('err')) {
+      setStatus('');
+    }
+  }, 4000);
 }
 
 async function fetchJSON(url, opts) {
@@ -67,7 +74,7 @@ function fillPeopleSelects() {
     person_id: p.person_id,
     label: `${p.display_name || p.full_name || '(unnamed)'} — id ${p.person_id}`,
   }));
-  for (const id of ['personPicker', 'positionPerson', 'aliasPerson']) {
+  for (const id of ['personPicker', 'positionPerson', 'aliasPerson', 'relPersonA', 'relPersonB']) {
     const sel = document.getElementById(id);
     if (!sel) continue;
     populateSelect(sel, opts, {
@@ -83,7 +90,7 @@ function fillSourceSelects() {
     source_id: s.source_id,
     label: `${s.title} — id ${s.source_id}${s.creator ? ` (${s.creator})` : ''}`,
   }));
-  for (const id of ['positionSource', 'aliasSource']) {
+  for (const id of ['positionSource', 'aliasSource', 'relSource', 'relCharSource']) {
     const sel = document.getElementById(id);
     if (!sel) continue;
     populateSelect(sel, opts, { valueKey: 'source_id', labelKey: 'label', placeholder: '' });
@@ -91,15 +98,29 @@ function fillSourceSelects() {
 }
 
 async function reloadAll() {
-  [lookups, people, sources] = await Promise.all([
+  [lookups, people, sources, events] = await Promise.all([
     fetchJSON('/api/lookups'),
     fetchJSON('/api/people'),
     fetchJSON('/api/sources'),
+    fetchJSON('/api/events'),
   ]);
   fillLookupSelects();
   fillPeopleSelects();
   fillSourceSelects();
+  fillEventSelect();
   renderRecentSources();
+}
+
+function fillEventSelect() {
+  const opts = events.map(e => ({
+    event_id: e.event_id,
+    label: `${e.event_name}${e.start_date ? ' — ' + e.start_date.slice(0, 4) : ''} (id ${e.event_id})`,
+  }));
+  for (const id of ['positionEvent', 'relEvent']) {
+    const sel = document.getElementById(id);
+    if (!sel) continue;
+    populateSelect(sel, opts, { valueKey: 'event_id', labelKey: 'label', placeholder: '— none —' });
+  }
 }
 
 function renderRecentSources() {
@@ -146,6 +167,8 @@ function formData(form) {
   // Convert numeric fields.
   for (const numField of [
     'birth_year', 'death_year', 'person_id', 'source_id', 'event_id',
+    'person_a_id', 'person_b_id', 'strength',
+    'char_event_id', 'char_source_id', 'char_strength', 'char_confidence_score',
     'confidence_score',
     'ideology_score', 'stance_on_union', 'stance_on_states_rights',
     'stance_on_slavery', 'stance_on_secession',
@@ -372,6 +395,31 @@ aliasForm.addEventListener('submit', async (ev) => {
     });
     setStatus(`Added alias ${res.alias_id} for person ${res.person_id}`, 'ok');
     aliasForm.reset();
+  } catch (e) {
+    setStatus(`Save failed: ${e.message}`, 'err');
+  }
+  clearStatusSoon();
+});
+
+// --- Relationship form ---
+const relationshipForm = document.getElementById('relationshipForm');
+relationshipForm.addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const body = formData(relationshipForm);
+  if (body.person_a_id != null && body.person_b_id != null && body.person_a_id === body.person_b_id) {
+    setStatus('Person A and Person B must be different.', 'err');
+    return;
+  }
+  try {
+    const res = await fetchJSON('/api/relationships', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const rel = res.relationship || {};
+    const extra = res.characterization_id ? ` + characterization ${res.characterization_id}` : '';
+    setStatus(`Created relationship ${rel.relationship_id} (${rel.person_low_id}↔${rel.person_high_id})${extra}`, 'ok');
+    relationshipForm.reset();
   } catch (e) {
     setStatus(`Save failed: ${e.message}`, 'err');
   }

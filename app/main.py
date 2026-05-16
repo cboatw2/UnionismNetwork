@@ -428,6 +428,20 @@ def list_sources() -> List[Dict[str, Any]]:
         )
 
 
+@app.get("/api/events")
+def list_events() -> List[Dict[str, Any]]:
+    with db.get_conn() as conn:
+        return db.fetch_all(
+            conn,
+            """
+            SELECT event_id, event_name, event_type_code, start_date, end_date,
+                   place_id, description
+            FROM events
+            ORDER BY start_date, event_name
+            """,
+        )
+
+
 def _none_if_blank(v: Any) -> Any:
     if v is None:
         return None
@@ -806,5 +820,129 @@ def create_alias(body: AliasIn) -> Dict[str, Any]:
             conn.commit()
             new_id = int(cur.lastrowid)
             return db.fetch_one(conn, "SELECT * FROM person_aliases WHERE alias_id = ?", (new_id,))
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Insert failed: {exc}")
+
+
+class RelationshipIn(BaseModel):
+    # Relationships row
+    person_a_id: int
+    person_b_id: int
+    relationship_type_code: str
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    strength: Optional[int] = None
+    alignment_status_code: Optional[str] = None
+    source_id: Optional[int] = None
+    notes: Optional[str] = None
+
+    # Optional issue-specific characterization (all-or-nothing).
+    # If issue_category_code is supplied, the rest of the required characterization
+    # fields must also be supplied.
+    issue_category_code: Optional[str] = None
+    char_alignment_status_code: Optional[str] = None
+    char_scale_level_code: Optional[str] = None
+    char_event_id: Optional[int] = None
+    char_date_start: Optional[str] = None
+    char_date_end: Optional[str] = None
+    char_strength: Optional[int] = None
+    char_claim_type_code: Optional[str] = None
+    char_confidence_score: Optional[int] = None
+    char_evidence_type_code: Optional[str] = None
+    char_counterevidence_present: int = 0
+    char_source_id: Optional[int] = None
+    char_justification_note: Optional[str] = None
+    char_notes: Optional[str] = None
+
+
+@app.post("/api/relationships")
+def create_relationship(body: RelationshipIn) -> Dict[str, Any]:
+    if body.person_a_id == body.person_b_id:
+        raise HTTPException(status_code=400, detail="person_a_id and person_b_id must differ")
+
+    # Enforce person_low_id < person_high_id per CHECK constraint.
+    low_id, high_id = sorted([body.person_a_id, body.person_b_id])
+
+    want_char = _none_if_blank(body.issue_category_code) is not None
+    if want_char:
+        required = {
+            "char_alignment_status_code": body.char_alignment_status_code,
+            "char_claim_type_code": body.char_claim_type_code,
+            "char_confidence_score": body.char_confidence_score,
+            "char_evidence_type_code": body.char_evidence_type_code,
+            "char_source_id": body.char_source_id,
+            "char_justification_note": _none_if_blank(body.char_justification_note),
+        }
+        missing = [k for k, v in required.items() if v is None]
+        if missing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Issue characterization requires: {', '.join(missing)}",
+            )
+
+    with db.get_conn() as conn:
+        try:
+            cur = conn.execute(
+                """
+                INSERT INTO relationships
+                  (person_low_id, person_high_id, relationship_type_code,
+                   start_date, end_date, strength, alignment_status_code,
+                   source_id, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    low_id,
+                    high_id,
+                    body.relationship_type_code,
+                    _none_if_blank(body.start_date),
+                    _none_if_blank(body.end_date),
+                    _none_if_blank(body.strength),
+                    _none_if_blank(body.alignment_status_code),
+                    _none_if_blank(body.source_id),
+                    _none_if_blank(body.notes),
+                ),
+            )
+            relationship_id = int(cur.lastrowid)
+
+            char_id = None
+            if want_char:
+                cur2 = conn.execute(
+                    """
+                    INSERT INTO relationship_characterizations
+                      (relationship_id, event_id, date_start, date_end,
+                       issue_category_code, scale_level_code,
+                       alignment_status_code, strength,
+                       claim_type_code, confidence_score, evidence_type_code,
+                       counterevidence_present, source_id,
+                       justification_note, notes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        relationship_id,
+                        _none_if_blank(body.char_event_id),
+                        _none_if_blank(body.char_date_start),
+                        _none_if_blank(body.char_date_end),
+                        body.issue_category_code,
+                        _none_if_blank(body.char_scale_level_code),
+                        body.char_alignment_status_code,
+                        _none_if_blank(body.char_strength),
+                        body.char_claim_type_code,
+                        body.char_confidence_score,
+                        body.char_evidence_type_code,
+                        1 if body.char_counterevidence_present else 0,
+                        body.char_source_id,
+                        body.char_justification_note,
+                        _none_if_blank(body.char_notes),
+                    ),
+                )
+                char_id = int(cur2.lastrowid)
+
+            conn.commit()
+            rel = db.fetch_one(
+                conn,
+                "SELECT * FROM relationships WHERE relationship_id = ?",
+                (relationship_id,),
+            )
+            return {"relationship": rel, "characterization_id": char_id}
         except Exception as exc:
             raise HTTPException(status_code=400, detail=f"Insert failed: {exc}")

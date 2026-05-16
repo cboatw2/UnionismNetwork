@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Unionism Network — Data Entry</title>
-    <link rel="stylesheet" href="/static/styles.css?v=3" />
-    <link rel="stylesheet" href="/static/entry.css?v=2" />
+    <link rel="stylesheet" href="/static/styles.css?v=5" />
+    <link rel="stylesheet" href="/static/entry.css?v=4" />
   </head>
   <body>
     <header class="topbar">
@@ -19,6 +19,7 @@
       <button type="button" class="tabBtn active" data-tab="person">Person</button>
       <button type="button" class="tabBtn" data-tab="source">Source</button>
       <button type="button" class="tabBtn" data-tab="position">Political Position</button>
+      <button type="button" class="tabBtn" data-tab="relationship">Relationship</button>
       <button type="button" class="tabBtn" data-tab="alias">Alias</button>
     </div>
 
@@ -141,6 +142,7 @@
             <label>Position label *<select name="position_label_code" data-lookup="position_label" required><option value=""></option></select></label>
             <label>Scale level *<select name="scale_level_code" data-lookup="scale_level" required><option value=""></option></select></label>
 
+            <label>Event (optional)<select name="event_id" id="positionEvent"><option value=""></option></select></label>
             <label>Date start<input name="date_start" placeholder="YYYY or YYYY-MM-DD" /></label>
             <label>Date end<input name="date_end" placeholder="YYYY or YYYY-MM-DD" /></label>
 
@@ -177,6 +179,71 @@
         </form>
       </section>
 
+      <!-- =============== RELATIONSHIP ============== -->
+      <section class="entryPanel hidden" data-panel="relationship">
+        <h2>Relationship <span class="muted">— an edge between two people, optionally characterized by issue</span></h2>
+
+        <form id="relationshipForm" class="entryForm">
+          <fieldset class="entryFieldset">
+            <legend>Relationship (baseline)</legend>
+            <div class="formGrid">
+              <label>Person A *<select name="person_a_id" id="relPersonA" required><option value=""></option></select></label>
+              <label>Person B *<select name="person_b_id" id="relPersonB" required><option value=""></option></select></label>
+
+              <label>Type *<select name="relationship_type_code" data-lookup="relationship_type" required><option value=""></option></select></label>
+              <label>Baseline alignment<select name="alignment_status_code" data-lookup="alignment_status"><option value=""></option></select></label>
+
+              <label>Start date<input name="start_date" placeholder="YYYY or YYYY-MM-DD" /></label>
+              <label>End date<input name="end_date" placeholder="YYYY or YYYY-MM-DD" /></label>
+
+              <label>Strength (1–3)<input name="strength" type="number" min="1" max="3" /></label>
+              <label>Source (optional)<select name="source_id" id="relSource"><option value=""></option></select></label>
+            </div>
+            <label class="fullWidth">Notes<textarea name="notes" rows="2"></textarea></label>
+          </fieldset>
+
+          <fieldset class="entryFieldset">
+            <legend>Issue characterization (optional — fill to color the edge for an issue)</legend>
+            <p class="muted">
+              If you set <strong>Issue category</strong>, you must also fill alignment, claim type, confidence, evidence type, source, and justification.
+            </p>
+            <div class="formGrid">
+              <label>Issue category<select name="issue_category_code" data-lookup="issue_category"><option value=""></option></select></label>
+              <label>Issue alignment<select name="char_alignment_status_code" data-lookup="alignment_status"><option value=""></option></select></label>
+
+              <label>Event (optional)<select name="char_event_id" id="relEvent"><option value=""></option></select></label>
+              <label>Scale level<select name="char_scale_level_code" data-lookup="scale_level"><option value=""></option></select></label>
+
+              <label>Date start<input name="char_date_start" placeholder="YYYY or YYYY-MM-DD" /></label>
+              <label>Date end<input name="char_date_end" placeholder="YYYY or YYYY-MM-DD" /></label>
+
+              <label>Strength (1–3)<input name="char_strength" type="number" min="1" max="3" /></label>
+              <label>Claim type<select name="char_claim_type_code" data-lookup="claim_type"><option value=""></option></select></label>
+
+              <label>Confidence<select name="char_confidence_score" data-lookup="confidence_score"><option value=""></option></select></label>
+              <label>Evidence type<select name="char_evidence_type_code" data-lookup="evidence_type"><option value=""></option></select></label>
+
+              <label>Source<select name="char_source_id" id="relCharSource"><option value=""></option></select></label>
+              <label class="checkboxRow">
+                <input name="char_counterevidence_present" type="checkbox" value="1" />
+                Counterevidence present
+              </label>
+            </div>
+            <label class="fullWidth">Justification note
+              <textarea name="char_justification_note" rows="3" placeholder="Why this alignment? Quote or paraphrase the evidence."></textarea>
+            </label>
+            <label class="fullWidth">Characterization notes
+              <textarea name="char_notes" rows="2"></textarea>
+            </label>
+          </fieldset>
+
+          <div class="formActions">
+            <button type="submit" class="primaryBtn">Save relationship</button>
+            <button type="reset" class="panelBtn">Reset</button>
+          </div>
+        </form>
+      </section>
+
       <!-- =============== ALIAS ============== -->
       <section class="entryPanel hidden" data-panel="alias">
         <h2>Alias <span class="muted">— alternate name for a person</span></h2>
@@ -196,6 +263,6 @@
       </section>
     </main>
 
-    <script src="/static/entry.js?v=2"></script>
+    <script src="/static/entry.js?v=5"></script>
   </body>
 </html>

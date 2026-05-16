@@ -65,6 +65,15 @@ let sim = null;
 let zoomBehavior = null;
 let zoomRoot = null; // <g> that zoom/pan transforms apply to
 
+// Filter / display state
+const filterState = {
+  search: '',
+  codedOnly: false,
+  hideCoMentions: true,
+  focusOnSelected: true,
+  showAllLabels: false,
+};
+
 function svgSize() {
   const rect = document.getElementById('network').getBoundingClientRect();
   return { width: Math.max(200, rect.width), height: Math.max(200, rect.height) };
@@ -82,16 +91,78 @@ function alignmentColor(code) {
   }
 }
 
+function normSearch(s) {
+  return String(s ?? '').trim().toLowerCase();
+}
+
+function nodeMatchesSearch(n, q) {
+  if (!q) return false;
+  return (
+    String(n.name || '').toLowerCase().includes(q) ||
+    String(n.full_name || '').toLowerCase().includes(q) ||
+    String(n.display_name || '').toLowerCase().includes(q)
+  );
+}
+
+function isPersonCoded(n) {
+  // "Coded" = has at least a position label for the current issue. The /api/state
+  // endpoint surfaces position_label_code per node.
+  return Boolean(n.position_label_code);
+}
+
+function isCoMentionEdge(e) {
+  return e.relationship_type_code === 'co_mentioned';
+}
+
+function applyFilters(nodes, edges) {
+  let filteredNodes = nodes;
+  let filteredEdges = edges;
+
+  if (filterState.codedOnly) {
+    filteredNodes = filteredNodes.filter(isPersonCoded);
+  }
+
+  if (filterState.hideCoMentions) {
+    filteredEdges = filteredEdges.filter(e => !isCoMentionEdge(e));
+  }
+
+  // Keep only edges whose endpoints survived the node filter.
+  const keepIds = new Set(filteredNodes.map(n => n.person_id));
+  filteredEdges = filteredEdges.filter(e => keepIds.has(e.source) && keepIds.has(e.target));
+
+  return { filteredNodes, filteredEdges };
+}
+
 function renderNetwork(nodes, edges) {
   const { width, height } = svgSize();
   svg.attr('viewBox', `0 0 ${width} ${height}`);
   svg.selectAll('*').remove();
 
-  const nodeById = new Map(nodes.map(n => [n.person_id, n]));
-  const graphNodes = nodes.map(n => ({ ...n }));
-  const graphEdges = edges
+  const { filteredNodes, filteredEdges } = applyFilters(nodes, edges);
+
+  const nodeById = new Map(filteredNodes.map(n => [n.person_id, n]));
+  const graphNodes = filteredNodes.map(n => ({ ...n }));
+  const graphEdges = filteredEdges
     .filter(e => nodeById.has(e.source) && nodeById.has(e.target))
     .map(e => ({ ...e }));
+
+  // Compute neighbor map for focus mode.
+  const neighborMap = new Map();
+  for (const n of graphNodes) neighborMap.set(n.person_id, new Set([n.person_id]));
+  for (const e of graphEdges) {
+    neighborMap.get(e.source)?.add(e.target);
+    neighborMap.get(e.target)?.add(e.source);
+  }
+
+  const q = normSearch(filterState.search);
+  const searchHits = new Set(
+    q ? graphNodes.filter(n => nodeMatchesSearch(n, q)).map(n => n.person_id) : []
+  );
+
+  function focusedSet() {
+    if (!filterState.focusOnSelected || selectedPersonId == null) return null;
+    return neighborMap.get(selectedPersonId) || new Set([selectedPersonId]);
+  }
 
   // Single <g> that holds everything so zoom/pan transforms it as one.
   zoomRoot = svg.append('g').attr('class', 'zoomRoot');
@@ -112,8 +183,12 @@ function renderNetwork(nodes, edges) {
     .selectAll('circle')
     .data(graphNodes)
     .join('circle')
-    .attr('r', d => (d.person_id === selectedPersonId ? 9 : 6))
-    .attr('fill', d => (d.person_id === selectedPersonId ? '#4f7cff' : '#e8e8ea'))
+    .attr('r', d => (d.person_id === selectedPersonId ? 9 : (searchHits.has(d.person_id) ? 8 : 6)))
+    .attr('fill', d => {
+      if (searchHits.has(d.person_id)) return '#ffd24a';
+      if (d.person_id === selectedPersonId) return '#4f7cff';
+      return isPersonCoded(d) ? '#cfd6ff' : '#e8e8ea';
+    })
     .attr('stroke', '#2a2f3a')
     .attr('stroke-width', 1)
     .call(d3.drag()
@@ -139,6 +214,42 @@ function renderNetwork(nodes, edges) {
 
   node.append('title').text(d => d.name);
 
+  // Labels: show for selected, search hits, coded people when "codedOnly" is on,
+  // and everyone when "showAllLabels" is checked.
+  const labels = zoomRoot.append('g')
+    .selectAll('text.nodeLabel')
+    .data(graphNodes)
+    .join('text')
+    .attr('class', 'nodeLabel')
+    .attr('dx', 10)
+    .attr('dy', 4)
+    .text(d => d.name)
+    .style('display', d => {
+      if (filterState.showAllLabels) return null;
+      if (d.person_id === selectedPersonId) return null;
+      if (searchHits.has(d.person_id)) return null;
+      if (filterState.codedOnly && isPersonCoded(d)) return null;
+      // In focus mode, label the focused person + neighbors.
+      const focus = focusedSet();
+      if (focus && focus.has(d.person_id)) return null;
+      return 'none';
+    });
+
+  // Apply dimming for focus mode + search.
+  function applyDimming() {
+    const focus = focusedSet();
+    node.classed('dimmed', d => {
+      if (focus && !focus.has(d.person_id)) return true;
+      if (q && !searchHits.has(d.person_id) && !(focus && focus.has(d.person_id))) return true;
+      return false;
+    });
+    link.classed('dimmed', d => {
+      if (focus && !(focus.has(d.source.person_id ?? d.source) && focus.has(d.target.person_id ?? d.target))) return true;
+      return false;
+    });
+  }
+  applyDimming();
+
   sim = d3.forceSimulation(graphNodes)
     .force('link', d3.forceLink(graphEdges).id(d => d.person_id).distance(90))
     .force('charge', d3.forceManyBody().strength(-240))
@@ -154,6 +265,10 @@ function renderNetwork(nodes, edges) {
       node
         .attr('cx', d => d.x)
         .attr('cy', d => d.y);
+
+      labels
+        .attr('x', d => d.x)
+        .attr('y', d => d.y);
     });
 
   // Background click clears selection
@@ -176,6 +291,12 @@ function renderNetwork(nodes, edges) {
       zoomRoot.attr('transform', event.transform);
     });
   svg.call(zoomBehavior).on('dblclick.zoom', null);
+
+  // If there's a search query with hits, gently pan/zoom to fit them.
+  if (q && searchHits.size > 0) {
+    // Wait for simulation to settle a tick or two, then fit to hits.
+    setTimeout(() => fitToNodes(graphNodes.filter(n => searchHits.has(n.person_id))), 400);
+  }
 }
 
 // Fit the current graph to the viewport.
@@ -192,6 +313,29 @@ function fitNetwork() {
   );
   const tx = (width - bbox.width * scale) / 2 - bbox.x * scale;
   const ty = (height - bbox.height * scale) / 2 - bbox.y * scale;
+  svg.transition().duration(400).call(
+    zoomBehavior.transform,
+    d3.zoomIdentity.translate(tx, ty).scale(scale)
+  );
+}
+
+// Fit to a subset of nodes (used after a search hit).
+function fitToNodes(subset) {
+  if (!zoomRoot || !zoomBehavior || !subset || subset.length === 0) return;
+  const { width, height } = svgSize();
+  const xs = subset.map(n => n.x).filter(v => Number.isFinite(v));
+  const ys = subset.map(n => n.y).filter(v => Number.isFinite(v));
+  if (xs.length === 0 || ys.length === 0) return;
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const bw = Math.max(40, maxX - minX);
+  const bh = Math.max(40, maxY - minY);
+  const pad = 120;
+  const scale = Math.min((width - pad * 2) / bw, (height - pad * 2) / bh, 2.5);
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const tx = width / 2 - cx * scale;
+  const ty = height / 2 - cy * scale;
   svg.transition().duration(400).call(
     zoomBehavior.transform,
     d3.zoomIdentity.translate(tx, ty).scale(scale)
@@ -365,6 +509,45 @@ function wireControls() {
 
   const fitBtn = document.getElementById('networkFit');
   if (fitBtn) fitBtn.addEventListener('click', fitNetwork);
+
+  // Filter / display controls
+  const searchInput = document.getElementById('search');
+  if (searchInput) {
+    let t = null;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        filterState.search = searchInput.value;
+        render();
+      }, 150);
+    });
+  }
+  const codedCb = document.getElementById('filterCoded');
+  if (codedCb) codedCb.addEventListener('change', () => {
+    filterState.codedOnly = codedCb.checked;
+    render();
+  });
+  const hideComCb = document.getElementById('filterHideCoMentions');
+  if (hideComCb) {
+    filterState.hideCoMentions = hideComCb.checked;
+    hideComCb.addEventListener('change', () => {
+      filterState.hideCoMentions = hideComCb.checked;
+      render();
+    });
+  }
+  const focusCb = document.getElementById('filterFocus');
+  if (focusCb) {
+    filterState.focusOnSelected = focusCb.checked;
+    focusCb.addEventListener('change', () => {
+      filterState.focusOnSelected = focusCb.checked;
+      render();
+    });
+  }
+  const labelsCb = document.getElementById('showLabels');
+  if (labelsCb) labelsCb.addEventListener('change', () => {
+    filterState.showAllLabels = labelsCb.checked;
+    render();
+  });
 
   const expandBtn = document.getElementById('networkExpand');
   const networkPanel = document.getElementById('networkPanel');

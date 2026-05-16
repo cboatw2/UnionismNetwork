@@ -37,6 +37,38 @@ body {
   flex-wrap: wrap;
 }
 
+.checkboxRow {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px !important;
+  color: var(--muted);
+  font-size: 12px;
+}
+.checkboxRow input { accent-color: var(--accent); }
+
+#search {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  min-width: 140px;
+}
+
+.nodeLabel {
+  font-size: 11px;
+  fill: #e8e8ea;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: #0b0c10;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.dimmed { opacity: 0.08; }
+.searchHit { fill: #ffd24a !important; }
+
 label {
   display: flex;
   gap: 8px;
