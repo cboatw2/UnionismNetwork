@@ -44,6 +44,16 @@ def entry_page() -> FileResponse:
     return FileResponse(str(static_dir / "entry.html"))
 
 
+@app.get("/people")
+def people_page() -> FileResponse:
+    return FileResponse(str(static_dir / "people.html"))
+
+
+@app.get("/events")
+def events_page() -> FileResponse:
+    return FileResponse(str(static_dir / "events.html"))
+
+
 @app.get("/api/meta")
 def meta() -> Dict[str, Any]:
     with db.get_conn() as conn:
@@ -375,10 +385,21 @@ def list_people() -> List[Dict[str, Any]]:
         return db.fetch_all(
             conn,
             """
-            SELECT person_id, full_name, display_name, birth_year, death_year,
-                   home_region_sc_code, occupation, notes
-            FROM people
-            ORDER BY COALESCE(display_name, full_name)
+            SELECT
+                p.person_id,
+                p.full_name,
+                p.display_name,
+                p.birth_year,
+                p.death_year,
+                p.home_region_sc_code,
+                p.occupation,
+                p.notes,
+                (SELECT COUNT(*) FROM person_aliases pa WHERE pa.person_id = p.person_id)    AS alias_count,
+                (SELECT COUNT(*) FROM positions po WHERE po.person_id = p.person_id)         AS position_count,
+                (SELECT COUNT(*) FROM relationships r
+                   WHERE r.person_low_id = p.person_id OR r.person_high_id = p.person_id)    AS relationship_count
+            FROM people p
+            ORDER BY COALESCE(p.display_name, p.full_name)
             """,
         )
 
@@ -411,6 +432,25 @@ def get_person(person_id: int) -> Dict[str, Any]:
             """,
             (person_id,),
         )
+        row["relationships"] = db.fetch_all(
+            conn,
+            """
+            SELECT r.relationship_id,
+                   r.person_low_id, r.person_high_id,
+                   r.relationship_type_code, r.alignment_status_code,
+                   r.start_date, r.end_date, r.strength,
+                   r.source_id, r.notes,
+                   CASE WHEN r.person_low_id = ? THEN r.person_high_id ELSE r.person_low_id END AS other_person_id,
+                   (SELECT COALESCE(p2.display_name, p2.full_name)
+                      FROM people p2
+                      WHERE p2.person_id = CASE WHEN r.person_low_id = ? THEN r.person_high_id ELSE r.person_low_id END
+                   ) AS other_person_name
+            FROM relationships r
+            WHERE r.person_low_id = ? OR r.person_high_id = ?
+            ORDER BY r.start_date, r.relationship_id
+            """,
+            (person_id, person_id, person_id, person_id),
+        )
         return row
 
 
@@ -434,10 +474,138 @@ def list_events() -> List[Dict[str, Any]]:
         return db.fetch_all(
             conn,
             """
-            SELECT event_id, event_name, event_type_code, start_date, end_date,
-                   place_id, description
-            FROM events
-            ORDER BY start_date, event_name
+            SELECT e.event_id, e.event_name, e.event_type_code,
+                   e.start_date, e.end_date, e.place_id, e.description,
+                   pl.place_name AS place_name,
+                   (SELECT COUNT(*) FROM relationship_characterizations rc
+                      WHERE rc.event_id = e.event_id) AS characterization_count
+            FROM events e
+            LEFT JOIN places pl ON pl.place_id = e.place_id
+            ORDER BY e.start_date, e.event_name
+            """,
+        )
+
+
+@app.get("/api/events/{event_id}")
+def get_event(event_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(
+            conn,
+            """
+            SELECT e.*, pl.place_name AS place_name
+            FROM events e
+            LEFT JOIN places pl ON pl.place_id = e.place_id
+            WHERE e.event_id = ?
+            """,
+            (event_id,),
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Event not found")
+        row["characterizations"] = db.fetch_all(
+            conn,
+            """
+            SELECT rc.relationship_characterization_id, rc.relationship_id,
+                   rc.issue_category_code, rc.alignment_status_code,
+                   rc.date_start, rc.date_end, rc.source_id, rc.justification_note,
+                   r.person_low_id, r.person_high_id,
+                   pl.full_name AS person_low_name,
+                   ph.full_name AS person_high_name
+            FROM relationship_characterizations rc
+            JOIN relationships r ON r.relationship_id = rc.relationship_id
+            JOIN people pl ON pl.person_id = r.person_low_id
+            JOIN people ph ON ph.person_id = r.person_high_id
+            WHERE rc.event_id = ?
+            ORDER BY rc.date_start
+            """,
+            (event_id,),
+        )
+        return row
+
+
+class EventIn(BaseModel):
+    event_name: Optional[str] = None
+    event_type_code: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    place_id: Optional[int] = None
+    description: Optional[str] = None
+
+
+@app.post("/api/events")
+def create_event(body: EventIn) -> Dict[str, Any]:
+    name = _none_if_blank(body.event_name)
+    etype = _none_if_blank(body.event_type_code)
+    if not name:
+        raise HTTPException(status_code=400, detail="event_name is required")
+    if not etype:
+        raise HTTPException(status_code=400, detail="event_type_code is required")
+    with db.get_conn() as conn:
+        try:
+            cur = conn.execute(
+                """
+                INSERT INTO events (event_name, event_type_code, start_date, end_date, place_id, description)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    name,
+                    etype,
+                    _none_if_blank(body.start_date),
+                    _none_if_blank(body.end_date),
+                    _none_if_blank(body.place_id),
+                    _none_if_blank(body.description),
+                ),
+            )
+            conn.commit()
+            return db.fetch_one(conn, "SELECT * FROM events WHERE event_id = ?", (int(cur.lastrowid),))
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Insert failed: {exc}")
+
+
+@app.patch("/api/events/{event_id}")
+def update_event(event_id: int, body: EventIn) -> Dict[str, Any]:
+    fields = ["event_name", "event_type_code", "start_date", "end_date", "place_id", "description"]
+    updates: Dict[str, Any] = {}
+    for f in fields:
+        v = getattr(body, f)
+        if v is not None:
+            updates[f] = _none_if_blank(v)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    sets = ", ".join(f"{k} = ?" for k in updates.keys())
+    vals = list(updates.values()) + [event_id]
+    with db.get_conn() as conn:
+        cur = conn.execute(f"UPDATE events SET {sets} WHERE event_id = ?", vals)
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Event not found")
+        conn.commit()
+        return db.fetch_one(conn, "SELECT * FROM events WHERE event_id = ?", (event_id,))
+
+
+@app.delete("/api/events/{event_id}")
+def delete_event(event_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(conn, "SELECT event_id FROM events WHERE event_id = ?", (event_id,))
+        if not row:
+            raise HTTPException(status_code=404, detail="Event not found")
+        # event_id on positions / relationship_characterizations is nullable, so
+        # NULL them out rather than blocking the delete.
+        conn.execute("UPDATE relationship_characterizations SET event_id = NULL WHERE event_id = ?", (event_id,))
+        conn.execute("UPDATE positions SET event_id = NULL WHERE event_id = ?", (event_id,))
+        conn.execute("DELETE FROM events WHERE event_id = ?", (event_id,))
+        conn.commit()
+        return {"deleted_event_id": event_id}
+
+
+@app.get("/api/places")
+def list_places() -> List[Dict[str, Any]]:
+    with db.get_conn() as conn:
+        return db.fetch_all(
+            conn,
+            """
+            SELECT place_id, place_name, place_type_code, parent_place_id,
+                   region_sc_code, modern_state
+            FROM places
+            ORDER BY place_name
             """,
         )
 
@@ -721,6 +889,60 @@ def update_person(person_id: int, body: PersonIn) -> Dict[str, Any]:
         return db.fetch_one(conn, "SELECT * FROM people WHERE person_id = ?", (person_id,))
 
 
+@app.get("/api/people/{person_id}/dependents")
+def person_dependents(person_id: int) -> Dict[str, Any]:
+    """Return counts of rows in other tables that reference this person.
+
+    Used by the People Workbench delete-confirmation dialog so the user can
+    see what will cascade.
+    """
+    with db.get_conn() as conn:
+        existing = db.fetch_one(conn, "SELECT person_id FROM people WHERE person_id = ?", (person_id,))
+        if not existing:
+            raise HTTPException(status_code=404, detail="Person not found")
+
+        def count(sql: str, params=(person_id,)) -> int:
+            row = conn.execute(sql, params).fetchone()
+            return int(row[0]) if row else 0
+
+        counts = {
+            "aliases": count("SELECT COUNT(*) FROM person_aliases WHERE person_id = ?"),
+            "positions": count("SELECT COUNT(*) FROM positions WHERE person_id = ?"),
+            "relationships": count(
+                "SELECT COUNT(*) FROM relationships WHERE person_low_id = ? OR person_high_id = ?",
+                (person_id, person_id),
+            ),
+            "organization_memberships": count(
+                "SELECT COUNT(*) FROM person_organization WHERE person_id = ?"
+            ),
+            "residences": count(
+                "SELECT COUNT(*) FROM person_place_residence WHERE person_id = ?"
+            ),
+        }
+        counts["total"] = sum(counts.values())
+        return counts
+
+
+@app.delete("/api/people/{person_id}")
+def delete_person(person_id: int) -> Dict[str, Any]:
+    """Delete a person and cascade through aliases, positions, relationships,
+    organization memberships, residences (FK ON DELETE CASCADE handles these).
+
+    The caller is expected to have shown a confirmation dialog with the output
+    of GET /api/people/{id}/dependents first.
+    """
+    with db.get_conn() as conn:
+        existing = db.fetch_one(conn, "SELECT person_id FROM people WHERE person_id = ?", (person_id,))
+        if not existing:
+            raise HTTPException(status_code=404, detail="Person not found")
+        try:
+            conn.execute("DELETE FROM people WHERE person_id = ?", (person_id,))
+            conn.commit()
+            return {"deleted_person_id": person_id}
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Delete failed: {exc}")
+
+
 class SourceIn(BaseModel):
     source_type_code: str = Field(..., min_length=1)
     title: str = Field(..., min_length=1)
@@ -946,3 +1168,130 @@ def create_relationship(body: RelationshipIn) -> Dict[str, Any]:
             return {"relationship": rel, "characterization_id": char_id}
         except Exception as exc:
             raise HTTPException(status_code=400, detail=f"Insert failed: {exc}")
+
+
+# ----- Relationship inspection / characterization editor -----
+
+@app.get("/api/relationships/{relationship_id}")
+def get_relationship(relationship_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(
+            conn,
+            """
+            SELECT r.*,
+                   pl.full_name AS person_low_name,
+                   ph.full_name AS person_high_name
+            FROM relationships r
+            JOIN people pl ON pl.person_id = r.person_low_id
+            JOIN people ph ON ph.person_id = r.person_high_id
+            WHERE r.relationship_id = ?
+            """,
+            (relationship_id,),
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Relationship not found")
+        row["characterizations"] = db.fetch_all(
+            conn,
+            """
+            SELECT rc.*, e.event_name AS event_name
+            FROM relationship_characterizations rc
+            LEFT JOIN events e ON e.event_id = rc.event_id
+            WHERE rc.relationship_id = ?
+            ORDER BY rc.date_start, rc.relationship_characterization_id
+            """,
+            (relationship_id,),
+        )
+        return row
+
+
+@app.delete("/api/relationships/{relationship_id}")
+def delete_relationship(relationship_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(conn, "SELECT relationship_id FROM relationships WHERE relationship_id = ?", (relationship_id,))
+        if not row:
+            raise HTTPException(status_code=404, detail="Relationship not found")
+        # ON DELETE CASCADE removes its characterizations.
+        conn.execute("DELETE FROM relationships WHERE relationship_id = ?", (relationship_id,))
+        conn.commit()
+        return {"deleted_relationship_id": relationship_id}
+
+
+class CharacterizationIn(BaseModel):
+    event_id: Optional[int] = None
+    date_start: Optional[str] = None
+    date_end: Optional[str] = None
+    issue_category_code: str
+    scale_level_code: Optional[str] = None
+    alignment_status_code: str
+    strength: Optional[int] = None
+    claim_type_code: str
+    confidence_score: int
+    evidence_type_code: str
+    counterevidence_present: int = 0
+    source_id: int
+    justification_note: str
+    notes: Optional[str] = None
+
+
+@app.post("/api/relationships/{relationship_id}/characterizations")
+def create_characterization(relationship_id: int, body: CharacterizationIn) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(conn, "SELECT relationship_id FROM relationships WHERE relationship_id = ?", (relationship_id,))
+        if not row:
+            raise HTTPException(status_code=404, detail="Relationship not found")
+        try:
+            cur = conn.execute(
+                """
+                INSERT INTO relationship_characterizations
+                  (relationship_id, event_id, date_start, date_end,
+                   issue_category_code, scale_level_code,
+                   alignment_status_code, strength,
+                   claim_type_code, confidence_score, evidence_type_code,
+                   counterevidence_present, source_id,
+                   justification_note, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    relationship_id,
+                    _none_if_blank(body.event_id),
+                    _none_if_blank(body.date_start),
+                    _none_if_blank(body.date_end),
+                    body.issue_category_code,
+                    _none_if_blank(body.scale_level_code),
+                    body.alignment_status_code,
+                    _none_if_blank(body.strength),
+                    body.claim_type_code,
+                    body.confidence_score,
+                    body.evidence_type_code,
+                    1 if body.counterevidence_present else 0,
+                    body.source_id,
+                    body.justification_note,
+                    _none_if_blank(body.notes),
+                ),
+            )
+            conn.commit()
+            return db.fetch_one(
+                conn,
+                "SELECT * FROM relationship_characterizations WHERE relationship_characterization_id = ?",
+                (int(cur.lastrowid),),
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Insert failed: {exc}")
+
+
+@app.delete("/api/characterizations/{characterization_id}")
+def delete_characterization(characterization_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(
+            conn,
+            "SELECT relationship_characterization_id FROM relationship_characterizations WHERE relationship_characterization_id = ?",
+            (characterization_id,),
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Characterization not found")
+        conn.execute(
+            "DELETE FROM relationship_characterizations WHERE relationship_characterization_id = ?",
+            (characterization_id,),
+        )
+        conn.commit()
+        return {"deleted_characterization_id": characterization_id}
