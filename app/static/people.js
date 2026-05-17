@@ -442,7 +442,11 @@ function renderPositions(positions) {
   `).join('');
 }
 
-// ---- Relationships (read-only Phase 1) ----
+// ---- Relationships (expandable, per-event timeline) ----
+
+let expandedRelId = null;       // currently-expanded relationship_id
+let allEvents = [];             // cached list for the char-dialog event picker
+let pendingCharRelId = null;    // relationship the char dialog is targeting
 
 function renderRelationships(rels) {
   relationshipCountEl.textContent = `(${rels.length})`;
@@ -452,20 +456,308 @@ function renderRelationships(rels) {
   }
   relationshipList.innerHTML = rels.map(r => {
     const other = r.other_person_name || `id ${r.other_person_id}`;
+    const align = r.alignment_status_code || '';
     return `
-      <div class="rowItem">
+      <div class="rowItem relItem" data-rel-id="${r.relationship_id}">
         <div class="rowItemMain">
           ↔ <strong>${escapeHtml(other)}</strong>
           <span class="rowItemMeta">
             ${escapeHtml(r.relationship_type_code || '')}
-            ${r.alignment_status_code ? ' · ' + escapeHtml(r.alignment_status_code) : ''}
+            ${align ? ' · <span class="alignBadge ' + escapeHtml(align) + '">' + escapeHtml(align) + '</span>' : ''}
             ${r.start_date ? ' · ' + escapeHtml(r.start_date) : ''}${r.end_date ? '–' + escapeHtml(r.end_date) : ''}
             ${r.strength != null ? ' · strength ' + r.strength : ''}
           </span>
+          <div class="relTimeline hidden" data-timeline-for="${r.relationship_id}"></div>
+        </div>
+        <div class="rowItemActions">
+          <button type="button" class="smallBtn" data-action="add-char" data-rel-id="${r.relationship_id}">+ Char</button>
+          <button type="button" class="smallBtn danger" data-action="delete-rel" data-rel-id="${r.relationship_id}">×</button>
         </div>
       </div>
     `;
   }).join('');
+
+  relationshipList.querySelectorAll('.relItem').forEach(item => {
+    item.addEventListener('click', (ev) => {
+      // Ignore clicks on the action buttons themselves.
+      if (ev.target.closest('button')) return;
+      const relId = Number(item.dataset.relId);
+      toggleTimeline(relId, item);
+    });
+  });
+  relationshipList.querySelectorAll('button[data-action="add-char"]').forEach(b => {
+    b.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      openCharDialog(Number(b.dataset.relId));
+    });
+  });
+  relationshipList.querySelectorAll('button[data-action="delete-rel"]').forEach(b => {
+    b.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const relId = Number(b.dataset.relId);
+      if (!confirm('Delete this relationship and all its characterizations?')) return;
+      try {
+        await fetchJSON(`/api/relationships/${relId}`, { method: 'DELETE' });
+        setStatus(`Deleted relationship ${relId}.`, 'ok');
+        if (selectedPerson) await selectPerson(selectedPerson.person_id);
+      } catch (e) {
+        setStatus(`Delete failed: ${e.message}`, 'err');
+      }
+    });
+  });
+
+  // Re-expand the previously expanded relationship if still present.
+  if (expandedRelId) {
+    const item = relationshipList.querySelector(`.relItem[data-rel-id="${expandedRelId}"]`);
+    if (item) toggleTimeline(expandedRelId, item, /*forceOpen=*/true);
+  }
+}
+
+async function toggleTimeline(relId, itemEl, forceOpen) {
+  const tl = itemEl.querySelector(`.relTimeline[data-timeline-for="${relId}"]`);
+  if (!tl) return;
+  if (!forceOpen && !tl.classList.contains('hidden') && expandedRelId === relId) {
+    tl.classList.add('hidden');
+    itemEl.classList.remove('expanded');
+    expandedRelId = null;
+    return;
+  }
+  // Collapse any other open one
+  relationshipList.querySelectorAll('.relTimeline').forEach(el => el.classList.add('hidden'));
+  relationshipList.querySelectorAll('.relItem').forEach(el => el.classList.remove('expanded'));
+
+  try {
+    const r = await fetchJSON(`/api/relationships/${relId}`);
+    const chars = r.characterizations || [];
+    if (!chars.length) {
+      tl.innerHTML = '<div class="muted">No characterizations yet. Click "+ Char" to add one tied to an event.</div>';
+    } else {
+      tl.innerHTML = chars.map(c => {
+        const dates = [c.date_start, c.date_end].filter(Boolean).join('–');
+        const align = c.alignment_status_code || '';
+        return `
+          <div class="charRow" data-char-id="${c.relationship_characterization_id}">
+            <span>
+              <strong>${escapeHtml(c.event_name || '(no event)')}</strong>
+              ${dates ? ' · ' + escapeHtml(dates) : ''} ·
+              ${escapeHtml(c.issue_category_code || '')} ·
+              <span class="alignBadge ${escapeHtml(align)}">${escapeHtml(align)}</span>
+              ${c.justification_note ? ' — <span class="muted">' + escapeHtml(c.justification_note.slice(0,80)) + '</span>' : ''}
+            </span>
+            <button type="button" class="smallBtn danger" data-action="delete-char" data-char-id="${c.relationship_characterization_id}">×</button>
+          </div>
+        `;
+      }).join('');
+      tl.querySelectorAll('button[data-action="delete-char"]').forEach(b => {
+        b.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          const cid = Number(b.dataset.charId);
+          if (!confirm('Delete this characterization?')) return;
+          try {
+            await fetchJSON(`/api/characterizations/${cid}`, { method: 'DELETE' });
+            setStatus(`Deleted characterization ${cid}.`, 'ok');
+            if (selectedPerson) await selectPerson(selectedPerson.person_id);
+          } catch (e) {
+            setStatus(`Delete failed: ${e.message}`, 'err');
+          }
+        });
+      });
+    }
+    tl.classList.remove('hidden');
+    itemEl.classList.add('expanded');
+    expandedRelId = relId;
+  } catch (e) {
+    setStatus(`Could not load characterizations: ${e.message}`, 'err');
+  }
+}
+
+// ---- Relationship add form (with other-person autocomplete) ----
+
+const relAddForm = document.getElementById('relAddForm');
+const relOtherSearch = document.getElementById('relOtherSearch');
+const relOtherId = document.getElementById('relOtherId');
+const relOtherAuto = document.getElementById('relOtherAuto');
+
+function renderAuto(matches) {
+  if (!matches.length) {
+    relOtherAuto.classList.remove('open');
+    relOtherAuto.innerHTML = '';
+    return;
+  }
+  relOtherAuto.classList.add('open');
+  relOtherAuto.innerHTML = matches.slice(0, 20).map(p => {
+    const name = p.display_name || p.full_name || '(unnamed)';
+    return `<div class="acItem" data-id="${p.person_id}">${escapeHtml(name)} <span class="muted">(id ${p.person_id})</span></div>`;
+  }).join('');
+  relOtherAuto.querySelectorAll('.acItem').forEach(it => {
+    it.addEventListener('mousedown', (ev) => {
+      ev.preventDefault();
+      const pid = Number(it.dataset.id);
+      const found = people.find(p => p.person_id === pid);
+      relOtherId.value = pid;
+      relOtherSearch.value = found ? (found.display_name || found.full_name) : `id ${pid}`;
+      relOtherAuto.classList.remove('open');
+    });
+  });
+}
+
+if (relOtherSearch) {
+  relOtherSearch.addEventListener('input', () => {
+    const q = relOtherSearch.value.trim().toLowerCase();
+    relOtherId.value = '';
+    if (!q || q.length < 2) { renderAuto([]); return; }
+    const me = selectedPerson ? selectedPerson.person_id : null;
+    const hits = people.filter(p => {
+      if (p.person_id === me) return false;
+      const hay = (p.full_name || '') + ' ' + (p.display_name || '');
+      return hay.toLowerCase().includes(q);
+    });
+    renderAuto(hits);
+  });
+  relOtherSearch.addEventListener('blur', () => {
+    setTimeout(() => relOtherAuto.classList.remove('open'), 150);
+  });
+}
+
+if (relAddForm) {
+  relAddForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (!selectedPerson) return;
+    const otherId = Number(relOtherId.value || 0);
+    if (!otherId) { setStatus('Pick the other person from the suggestions.', 'err'); return; }
+
+    const fd = new FormData(relAddForm);
+    const body = {
+      person_a_id: selectedPerson.person_id,
+      person_b_id: otherId,
+      relationship_type_code: fd.get('relationship_type_code'),
+      alignment_status_code: fd.get('alignment_status_code') || null,
+      start_date: fd.get('start_date') || null,
+      end_date: fd.get('end_date') || null,
+      strength: fd.get('strength') ? Number(fd.get('strength')) : null,
+      source_id: fd.get('source_id') ? Number(fd.get('source_id')) : null,
+      notes: fd.get('notes') || null,
+    };
+    if (!body.relationship_type_code) { setStatus('Pick a relationship type.', 'err'); return; }
+    try {
+      const res = await fetchJSON('/api/relationships', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      setStatus(`Created relationship ${res.relationship.relationship_id}.`, 'ok');
+      relAddForm.reset();
+      relOtherId.value = '';
+      const detailsEl = relAddForm.closest('details');
+      if (detailsEl) detailsEl.open = false;
+      await selectPerson(selectedPerson.person_id);
+      await loadList();
+    } catch (e) {
+      setStatus(`Create failed: ${e.message}`, 'err');
+    }
+  });
+}
+
+// ---- Characterization dialog ----
+
+const charDialog = document.getElementById('charDialog');
+const charDialogWho = document.getElementById('charDialogWho');
+const charEventSelect = document.getElementById('charEventSelect');
+const charForm = document.getElementById('charForm');
+const charCancel = document.getElementById('charCancel');
+const charCancelX = document.getElementById('charCancelX');
+
+async function ensureEventsLoaded() {
+  if (allEvents.length) return;
+  try {
+    allEvents = await fetchJSON('/api/events');
+  } catch (_) {
+    allEvents = [];
+  }
+}
+
+async function openCharDialog(relId) {
+  pendingCharRelId = relId;
+  await ensureEventsLoaded();
+  // Populate event select
+  while (charEventSelect.options.length > 1) charEventSelect.remove(1);
+  for (const e of allEvents) {
+    const o = document.createElement('option');
+    o.value = e.event_id;
+    const dates = [e.start_date, e.end_date].filter(Boolean).join('–');
+    o.textContent = `${e.event_name}${dates ? ' (' + dates + ')' : ''}`;
+    charEventSelect.appendChild(o);
+  }
+  // Populate other lookup-driven selects inside the dialog
+  charDialog.querySelectorAll('select[data-lookup]').forEach(sel => {
+    const key = sel.getAttribute('data-lookup');
+    const items = lookups[key] || [];
+    while (sel.options.length > 1) sel.remove(1);
+    for (const it of items) {
+      const o = document.createElement('option');
+      o.value = it.code;
+      o.textContent = `${it.label} (${it.code})`;
+      sel.appendChild(o);
+    }
+  });
+  // Identify the pair
+  let label = `relationship ${relId}`;
+  if (selectedPerson) {
+    const rel = (selectedPerson.relationships || []).find(r => r.relationship_id === relId);
+    if (rel) {
+      const other = rel.other_person_name || `id ${rel.other_person_id}`;
+      label = `${selectedPerson.display_name || selectedPerson.full_name} ↔ ${other}`;
+    }
+  }
+  charDialogWho.textContent = label;
+  charForm.reset();
+  charDialog.classList.remove('hidden');
+}
+
+function closeCharDialog() {
+  charDialog.classList.add('hidden');
+  pendingCharRelId = null;
+}
+if (charCancel) charCancel.addEventListener('click', closeCharDialog);
+if (charCancelX) charCancelX.addEventListener('click', closeCharDialog);
+
+if (charForm) {
+  charForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (!pendingCharRelId) return;
+    const fd = new FormData(charForm);
+    const body = {
+      event_id: fd.get('event_id') ? Number(fd.get('event_id')) : null,
+      date_start: fd.get('date_start') || null,
+      date_end: fd.get('date_end') || null,
+      issue_category_code: fd.get('issue_category_code'),
+      scale_level_code: fd.get('scale_level_code') || null,
+      alignment_status_code: fd.get('alignment_status_code'),
+      strength: fd.get('strength') ? Number(fd.get('strength')) : null,
+      claim_type_code: fd.get('claim_type_code'),
+      confidence_score: Number(fd.get('confidence_score')),
+      evidence_type_code: fd.get('evidence_type_code'),
+      counterevidence_present: fd.get('counterevidence_present') ? 1 : 0,
+      source_id: Number(fd.get('source_id')),
+      justification_note: fd.get('justification_note'),
+      notes: fd.get('notes') || null,
+    };
+    try {
+      await fetchJSON(`/api/relationships/${pendingCharRelId}/characterizations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      setStatus('Characterization added.', 'ok');
+      const relId = pendingCharRelId;
+      closeCharDialog();
+      // Refresh and re-expand
+      expandedRelId = relId;
+      if (selectedPerson) await selectPerson(selectedPerson.person_id);
+    } catch (e) {
+      setStatus(`Save failed: ${e.message}`, 'err');
+    }
+  });
 }
 
 // ---- Delete person ----

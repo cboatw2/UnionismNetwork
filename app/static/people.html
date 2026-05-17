@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Unionism Network — People Workbench</title>
     <link rel="stylesheet" href="/static/styles.css?v=5" />
-    <link rel="stylesheet" href="/static/people.css?v=1" />
+    <link rel="stylesheet" href="/static/people.css?v=2" />
   </head>
   <body class="workbench">
     <aside class="sidebar">
@@ -176,6 +176,52 @@
       </div>
     </div>
 
-    <script src="/static/people.js?v=1"></script>
+    <!-- Characterization-add dialog -->
+    <div id="charDialog" class="modalOverlay hidden" role="dialog" aria-modal="true">
+      <div class="modalBox" style="width:600px; max-width:95vw;">
+        <div class="modalHeader">
+          <strong>Add characterization</strong>
+          <button type="button" class="panelBtn" id="charCancelX">×</button>
+        </div>
+        <div class="modalBody">
+          <div class="muted" id="charDialogWho" style="margin-bottom:8px;">—</div>
+          <form id="charForm" class="entryForm">
+            <div class="formGrid">
+              <label class="fullWidth">Event
+                <select name="event_id" id="charEventSelect">
+                  <option value="">(no anchor event)</option>
+                </select>
+              </label>
+              <label>Issue category *<select name="issue_category_code" data-lookup="issue_category" required><option value=""></option></select></label>
+              <label>Alignment *<select name="alignment_status_code" data-lookup="alignment_status" required><option value=""></option></select></label>
+              <label>Scale<select name="scale_level_code" data-lookup="scale_level"><option value=""></option></select></label>
+              <label>Date start<input name="date_start" placeholder="YYYY-MM-DD" /></label>
+              <label>Date end<input name="date_end" placeholder="YYYY-MM-DD" /></label>
+              <label>Strength (1–3)<input name="strength" type="number" min="1" max="3" /></label>
+              <label>Claim type *<select name="claim_type_code" data-lookup="claim_type" required><option value=""></option></select></label>
+              <label>Evidence type *<select name="evidence_type_code" data-lookup="evidence_type" required><option value=""></option></select></label>
+              <label>Confidence *<select name="confidence_score" data-lookup="confidence_score" required><option value=""></option></select></label>
+              <label>Source ID *<input name="source_id" type="number" required /></label>
+              <label class="checkboxRow">
+                <input type="checkbox" name="counterevidence_present" value="1" />
+                Counterevidence present
+              </label>
+            </div>
+            <label class="fullWidth">Justification note *
+              <textarea name="justification_note" rows="2" required></textarea>
+            </label>
+            <label class="fullWidth">Notes
+              <textarea name="notes" rows="2"></textarea>
+            </label>
+            <div class="modalActions">
+              <button type="button" class="panelBtn" id="charCancel">Cancel</button>
+              <button type="submit" class="primaryBtn">Add characterization</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/people.js?v=2"></script>
   </body>
 </html>

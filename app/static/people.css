@@ -358,3 +358,72 @@ body.workbench {
 }
 .modalBody { padding: 12px 16px; }
 .modalActions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+
+/* Add-block (expandable inline forms inside the editor) */
+.addBlock {
+  margin-top: 10px;
+  border: 1px dashed var(--border, #2a2f3a);
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+.addBlock[open] { padding: 8px 12px; background: rgba(255,255,255,0.02); }
+.addSummary {
+  cursor: pointer;
+  color: #cfd6ff;
+  font-size: 12px;
+  padding: 2px 0;
+}
+.addForm { margin-top: 8px; }
+
+/* Autocomplete (for relationship "other person") */
+.autocomplete {
+  position: relative;
+  max-height: 160px;
+  overflow-y: auto;
+  background: #15171c;
+  border: 1px solid var(--border, #2a2f3a);
+  border-radius: 4px;
+  display: none;
+  margin-top: 2px;
+}
+.autocomplete.open { display: block; }
+.autocomplete .acItem {
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.autocomplete .acItem:hover,
+.autocomplete .acItem.highlight { background: rgba(79,124,255,0.18); }
+
+/* Relationship list — clickable to expand timeline */
+.relItem { cursor: pointer; }
+.relItem.expanded { background: rgba(79,124,255,0.08); }
+.relTimeline {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-left: 3px solid #4f7cff;
+  background: rgba(0,0,0,0.2);
+  border-radius: 0 4px 4px 0;
+}
+.relTimeline .charRow {
+  font-size: 11px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.relTimeline .charRow:last-child { border-bottom: none; }
+.alignBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.alignBadge.aligned { background: #1f5e1f; color: #cfffcf; }
+.alignBadge.partially_aligned { background: #4d6b1f; color: #e8ffcf; }
+.alignBadge.strained { background: #6b5a1f; color: #ffeab0; }
+.alignBadge.fractured { background: #6b3a1f; color: #ffd0b0; }
+.alignBadge.adversarial { background: #6b1f1f; color: #ffcfcf; }
