@@ -451,6 +451,22 @@ def get_person(person_id: int) -> Dict[str, Any]:
             """,
             (person_id, person_id, person_id, person_id),
         )
+        row["memberships"] = db.fetch_all(
+            conn,
+            """
+            SELECT po.person_org_id, po.organization_id, po.role,
+                   po.date_start, po.date_end, po.source_id, po.notes,
+                   o.name AS organization_name, o.org_type_code,
+                   o.place_id, pl.place_name AS place_name,
+                   o.start_date AS org_start_date, o.end_date AS org_end_date
+            FROM person_organization po
+            JOIN organizations o ON o.organization_id = po.organization_id
+            LEFT JOIN places pl ON pl.place_id = o.place_id
+            WHERE po.person_id = ?
+            ORDER BY po.date_start, po.person_org_id
+            """,
+            (person_id,),
+        )
         return row
 
 
@@ -1295,3 +1311,270 @@ def delete_characterization(characterization_id: int) -> Dict[str, Any]:
         )
         conn.commit()
         return {"deleted_characterization_id": characterization_id}
+
+
+# ============================================================================
+# Phase 3: Organizations (civic / religious / political clubs) + memberships
+# ============================================================================
+
+class OrganizationIn(BaseModel):
+    name: str
+    org_type_code: Optional[str] = None
+    place_id: Optional[int] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class MembershipIn(BaseModel):
+    organization_id: int
+    role: Optional[str] = None
+    date_start: Optional[str] = None
+    date_end: Optional[str] = None
+    source_id: Optional[int] = None
+    notes: Optional[str] = None
+    # Optional geographic tie. If provided we (a) insert a person_place_residence
+    # row for the same person/place/dates and (b) backfill the organization's
+    # place_id when it is currently null.
+    place_id: Optional[int] = None
+    residence_type_code: Optional[str] = "temporary_residence"
+
+
+@app.get("/api/organizations")
+def list_organizations() -> List[Dict[str, Any]]:
+    with db.get_conn() as conn:
+        return db.fetch_all(
+            conn,
+            """
+            SELECT o.organization_id, o.name, o.org_type_code, o.place_id,
+                   o.start_date, o.end_date, o.notes,
+                   pl.place_name AS place_name,
+                   (SELECT COUNT(*) FROM person_organization po
+                      WHERE po.organization_id = o.organization_id) AS member_count
+            FROM organizations o
+            LEFT JOIN places pl ON pl.place_id = o.place_id
+            ORDER BY o.name
+            """,
+        )
+
+
+@app.get("/api/organizations/{organization_id}")
+def get_organization(organization_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(
+            conn,
+            """
+            SELECT o.*, pl.place_name AS place_name
+            FROM organizations o
+            LEFT JOIN places pl ON pl.place_id = o.place_id
+            WHERE o.organization_id = ?
+            """,
+            (organization_id,),
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        row["members"] = db.fetch_all(
+            conn,
+            """
+            SELECT po.person_org_id, po.person_id, po.role,
+                   po.date_start, po.date_end, po.source_id, po.notes,
+                   COALESCE(p.display_name, p.full_name) AS person_name
+            FROM person_organization po
+            JOIN people p ON p.person_id = po.person_id
+            WHERE po.organization_id = ?
+            ORDER BY po.date_start, po.person_org_id
+            """,
+            (organization_id,),
+        )
+        return row
+
+
+@app.post("/api/organizations")
+def create_organization(body: OrganizationIn) -> Dict[str, Any]:
+    if not body.name or not body.name.strip():
+        raise HTTPException(status_code=400, detail="name is required")
+    with db.get_conn() as conn:
+        try:
+            cur = conn.execute(
+                """
+                INSERT INTO organizations (name, org_type_code, place_id, start_date, end_date, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    body.name.strip(),
+                    body.org_type_code,
+                    body.place_id,
+                    body.start_date,
+                    body.end_date,
+                    body.notes,
+                ),
+            )
+            conn.commit()
+            new_id = cur.lastrowid
+        except sqlite3.IntegrityError as e:
+            raise HTTPException(status_code=400, detail=f"Insert failed: {e}")
+        return get_organization(new_id)
+
+
+@app.patch("/api/organizations/{organization_id}")
+def update_organization(organization_id: int, body: OrganizationIn) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        existing = db.fetch_one(
+            conn,
+            "SELECT organization_id FROM organizations WHERE organization_id = ?",
+            (organization_id,),
+        )
+        if not existing:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        conn.execute(
+            """
+            UPDATE organizations SET
+              name = ?, org_type_code = ?, place_id = ?,
+              start_date = ?, end_date = ?, notes = ?
+            WHERE organization_id = ?
+            """,
+            (
+                body.name.strip(),
+                body.org_type_code,
+                body.place_id,
+                body.start_date,
+                body.end_date,
+                body.notes,
+                organization_id,
+            ),
+        )
+        conn.commit()
+    return get_organization(organization_id)
+
+
+@app.delete("/api/organizations/{organization_id}")
+def delete_organization(organization_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        existing = db.fetch_one(
+            conn,
+            "SELECT organization_id FROM organizations WHERE organization_id = ?",
+            (organization_id,),
+        )
+        if not existing:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        # Drop memberships explicitly (no ON DELETE CASCADE assumed).
+        conn.execute(
+            "DELETE FROM person_organization WHERE organization_id = ?",
+            (organization_id,),
+        )
+        conn.execute(
+            "DELETE FROM organizations WHERE organization_id = ?",
+            (organization_id,),
+        )
+        conn.commit()
+        return {"deleted_organization_id": organization_id}
+
+
+@app.post("/api/people/{person_id}/memberships")
+def add_membership(person_id: int, body: MembershipIn) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        person = db.fetch_one(
+            conn, "SELECT person_id FROM people WHERE person_id = ?", (person_id,)
+        )
+        if not person:
+            raise HTTPException(status_code=404, detail="Person not found")
+        org = db.fetch_one(
+            conn,
+            "SELECT organization_id, place_id FROM organizations WHERE organization_id = ?",
+            (body.organization_id,),
+        )
+        if not org:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        # Validate place if provided.
+        if body.place_id is not None:
+            place = db.fetch_one(
+                conn,
+                "SELECT place_id FROM places WHERE place_id = ?",
+                (body.place_id,),
+            )
+            if not place:
+                raise HTTPException(status_code=404, detail="Place not found")
+        try:
+            cur = conn.execute(
+                """
+                INSERT INTO person_organization
+                  (person_id, organization_id, role, date_start, date_end, source_id, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    person_id,
+                    body.organization_id,
+                    body.role,
+                    body.date_start,
+                    body.date_end,
+                    body.source_id,
+                    body.notes,
+                ),
+            )
+            new_id = cur.lastrowid
+
+            # Geographic tie: residence row for this person at this place + dates.
+            residence_id: Optional[int] = None
+            if body.place_id is not None:
+                rcur = conn.execute(
+                    """
+                    INSERT INTO person_place_residence
+                      (person_id, place_id, residence_type_code,
+                       date_start, date_end, source_id, notes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        person_id,
+                        body.place_id,
+                        body.residence_type_code or "temporary_residence",
+                        body.date_start,
+                        body.date_end,
+                        body.source_id,
+                        f"via membership in organization {body.organization_id}",
+                    ),
+                )
+                residence_id = rcur.lastrowid
+                # Backfill the organization's place_id if it had none.
+                if org["place_id"] is None:
+                    conn.execute(
+                        "UPDATE organizations SET place_id = ? WHERE organization_id = ?",
+                        (body.place_id, body.organization_id),
+                    )
+            conn.commit()
+        except sqlite3.IntegrityError as e:
+            raise HTTPException(status_code=400, detail=f"Insert failed: {e}")
+        row = db.fetch_one(
+            conn,
+            """
+            SELECT po.person_org_id, po.person_id, po.organization_id, po.role,
+                   po.date_start, po.date_end, po.source_id, po.notes,
+                   o.name AS organization_name, o.org_type_code, o.place_id,
+                   pl.place_name AS place_name
+            FROM person_organization po
+            JOIN organizations o ON o.organization_id = po.organization_id
+            LEFT JOIN places pl ON pl.place_id = o.place_id
+            WHERE po.person_org_id = ?
+            """,
+            (new_id,),
+        )
+        if residence_id is not None:
+            row["residence_id"] = residence_id
+        return row
+
+
+@app.delete("/api/memberships/{person_org_id}")
+def delete_membership(person_org_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        existing = db.fetch_one(
+            conn,
+            "SELECT person_org_id FROM person_organization WHERE person_org_id = ?",
+            (person_org_id,),
+        )
+        if not existing:
+            raise HTTPException(status_code=404, detail="Membership not found")
+        conn.execute(
+            "DELETE FROM person_organization WHERE person_org_id = ?",
+            (person_org_id,),
+        )
+        conn.commit()
+        return {"deleted_person_org_id": person_org_id}

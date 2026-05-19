@@ -152,6 +152,43 @@
                 </form>
               </details>
             </section>
+
+            <!-- Memberships (organizations: civic, religious, political clubs) -->
+            <section class="editorSection">
+              <h3>Memberships <span class="muted" id="membershipCount">(0)</span></h3>
+              <div id="membershipList" class="rowList"></div>
+
+              <details class="addBlock">
+                <summary class="addSummary">+ Add membership</summary>
+                <form id="membershipAddForm" class="entryForm addForm">
+                  <div class="formGrid">
+                    <label class="fullWidth">
+                      Organization *
+                      <input type="text" id="orgSearch" placeholder="Type to search existing… or click 'New' to create" autocomplete="off" />
+                      <input type="hidden" name="organization_id" id="orgId" />
+                      <div class="autocomplete" id="orgAuto"></div>
+                      <button type="button" class="smallBtn" id="newOrgBtn" style="margin-top:4px;">+ New organization…</button>
+                    </label>
+                    <label>Role<input name="role" placeholder="e.g. president, deacon, founding member" /></label>
+                    <label>Source ID<input name="source_id" type="number" /></label>
+                    <label>Date start<input name="date_start" placeholder="YYYY-MM-DD" /></label>
+                    <label>Date end<input name="date_end" placeholder="YYYY-MM-DD" /></label>
+                    <label class="fullWidth">Location
+                      <select name="place_id" id="membershipPlace">
+                        <option value="">(no geographic tie)</option>
+                      </select>
+                      <span class="muted" style="font-size:11px;">Adds a residence row for this person at the selected place, and back-fills the organization's location if it has none.</span>
+                    </label>
+                  </div>
+                  <label class="fullWidth">Notes
+                    <textarea name="notes" rows="2"></textarea>
+                  </label>
+                  <div class="formActions">
+                    <button type="submit" class="primaryBtn">Add membership</button>
+                  </div>
+                </form>
+              </details>
+            </section>
           </div>
         </section>
       </div>
@@ -222,6 +259,34 @@
       </div>
     </div>
 
-    <script src="/static/people.js?v=2"></script>
+    <!-- Create-organization dialog -->
+    <div id="orgDialog" class="modalOverlay hidden" role="dialog" aria-modal="true">
+      <div class="modalBox" style="width:480px; max-width:95vw;">
+        <div class="modalHeader">
+          <strong>Create organization</strong>
+          <button type="button" class="panelBtn" id="orgCancelX">×</button>
+        </div>
+        <div class="modalBody">
+          <form id="orgCreateForm" class="entryForm">
+            <div class="formGrid">
+              <label class="fullWidth">Name *<input name="name" required /></label>
+              <label>Type<select name="org_type_code" data-lookup="org_type"><option value=""></option></select></label>
+              <label>Place<select name="place_id" id="orgDialogPlace"><option value="">(none)</option></select></label>
+              <label>Start date<input name="start_date" placeholder="YYYY-MM-DD" /></label>
+              <label>End date<input name="end_date" placeholder="YYYY-MM-DD" /></label>
+            </div>
+            <label class="fullWidth">Notes
+              <textarea name="notes" rows="2"></textarea>
+            </label>
+            <div class="modalActions">
+              <button type="button" class="panelBtn" id="orgCancel">Cancel</button>
+              <button type="submit" class="primaryBtn">Create</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/people.js?v=4"></script>
   </body>
 </html>

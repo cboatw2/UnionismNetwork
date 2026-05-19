@@ -1,5 +1,5 @@
 const yearInput = document.getElementById('year');
-const yearLabel = document.getElementById('yearLabel');
+const yearLabel = document.getElementById('yearInput');
 const issueSelect = document.getElementById('issue');
 const scaleSelect = document.getElementById('scale');
 const detailsEl = document.getElementById('details');
@@ -482,7 +482,8 @@ async function loadState() {
 
 function render() {
   if (!state) return;
-  yearLabel.textContent = String(state.year);
+  yearInput.value = String(state.year);
+  yearLabel.value = String(state.year);
 
   renderMap(state.nodes);
   renderNetwork(state.nodes, state.edges);
@@ -490,8 +491,14 @@ function render() {
 }
 
 function wireControls() {
-  yearInput.addEventListener('input', async () => {
-    yearLabel.textContent = yearInput.value;
+  // Slider drives the number input live; commit triggers refresh.
+  yearInput.addEventListener('input', () => {
+    yearLabel.value = yearInput.value;
+  });
+  // Number input drives the slider live; commit (Enter/blur) triggers refresh.
+  yearLabel.addEventListener('input', () => {
+    const v = parseInt(yearLabel.value, 10);
+    if (!Number.isNaN(v)) yearInput.value = String(v);
   });
 
   const refresh = async () => {
@@ -500,6 +507,7 @@ function wireControls() {
   };
 
   yearInput.addEventListener('change', refresh);
+  yearLabel.addEventListener('change', refresh);
   issueSelect.addEventListener('change', refresh);
   scaleSelect.addEventListener('change', refresh);
 

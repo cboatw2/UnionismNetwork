@@ -30,6 +30,8 @@ const positionList = document.getElementById('positionList');
 const positionCountEl = document.getElementById('positionCount');
 const relationshipList = document.getElementById('relationshipList');
 const relationshipCountEl = document.getElementById('relationshipCount');
+const membershipList = document.getElementById('membershipList');
+const membershipCountEl = document.getElementById('membershipCount');
 
 const deleteBtn = document.getElementById('deleteBtn');
 const deleteDialog = document.getElementById('deleteDialog');
@@ -354,6 +356,8 @@ newPersonBtn.addEventListener('click', () => {
   positionCountEl.textContent = '(0)';
   relationshipList.innerHTML = '<div class="muted">Save the person first to add relationships.</div>';
   relationshipCountEl.textContent = '(0)';
+  membershipList.innerHTML = '<div class="muted">Save the person first to add memberships.</div>';
+  membershipCountEl.textContent = '(0)';
   showEditor();
   bioForm.querySelector('input[name="full_name"]').focus();
 });
@@ -371,6 +375,7 @@ async function selectPerson(personId) {
     renderAliases(p.aliases || []);
     renderPositions(p.positions || []);
     renderRelationships(p.relationships || []);
+    renderMemberships(p.memberships || []);
     document.querySelectorAll('.listRow.selected').forEach(r => r.classList.remove('selected'));
     const row = listEl.querySelector(`.listRow[data-person-id="${personId}"]`);
     if (row) {
@@ -848,3 +853,225 @@ filterConnected.addEventListener('change', renderList);
     setStatus(`Init failed: ${e.message}`, 'err');
   }
 })();
+
+
+// ============================================================================
+// Memberships (organizations: civic, religious, political clubs)
+// ============================================================================
+
+let allOrgs = [];
+let allPlaces = [];
+
+async function ensureOrgsLoaded(force=false) {
+  if (!force && allOrgs.length) return;
+  try { allOrgs = await fetchJSON('/api/organizations'); }
+  catch (_) { allOrgs = []; }
+}
+
+async function ensurePlacesLoaded(force=false) {
+  if (!force && allPlaces.length) return;
+  try { allPlaces = await fetchJSON('/api/places'); }
+  catch (_) { allPlaces = []; }
+  // Populate any place selects that have already been rendered.
+  for (const selId of ['membershipPlace', 'orgDialogPlace']) {
+    const sel = document.getElementById(selId);
+    if (!sel) continue;
+    // Preserve current selection and the first "(none)" option.
+    const currentVal = sel.value;
+    while (sel.options.length > 1) sel.remove(1);
+    for (const p of allPlaces) {
+      const o = document.createElement('option');
+      o.value = p.place_id;
+      o.textContent = `${p.place_name}${p.place_type_code ? ' (' + p.place_type_code + ')' : ''}`;
+      sel.appendChild(o);
+    }
+    if (currentVal) sel.value = currentVal;
+  }
+}
+
+function renderMemberships(rows) {
+  membershipCountEl.textContent = `(${rows.length})`;
+  if (!rows.length) {
+    membershipList.innerHTML = '<div class="muted">No memberships yet.</div>';
+    return;
+  }
+  membershipList.innerHTML = rows.map(m => {
+    const dates = [m.date_start, m.date_end].filter(Boolean).join('–');
+    return `
+      <div class="rowItem">
+        <div class="rowItemMain">
+          <strong>${escapeHtml(m.organization_name || '(unnamed)')}</strong>
+          <span class="rowItemMeta">
+            ${escapeHtml(m.org_type_code || '')}
+            ${m.role ? ' · ' + escapeHtml(m.role) : ''}
+            ${dates ? ' · ' + escapeHtml(dates) : ''}
+            ${m.place_name ? ' · 📍 ' + escapeHtml(m.place_name) : ''}
+          </span>
+          ${m.notes ? `<div class="rowItemMeta">${escapeHtml(m.notes)}</div>` : ''}
+        </div>
+        <div class="rowItemActions">
+          <button type="button" class="smallBtn danger" data-action="delete-membership" data-id="${m.person_org_id}">×</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  membershipList.querySelectorAll('button[data-action="delete-membership"]').forEach(b => {
+    b.addEventListener('click', async () => {
+      const id = Number(b.dataset.id);
+      if (!confirm('Remove this membership?')) return;
+      try {
+        await fetchJSON(`/api/memberships/${id}`, { method: 'DELETE' });
+        setStatus(`Membership ${id} removed.`, 'ok');
+        if (selectedPerson) await selectPerson(selectedPerson.person_id);
+      } catch (e) {
+        setStatus(`Delete failed: ${e.message}`, 'err');
+      }
+    });
+  });
+}
+
+// --- Org autocomplete inside the "+ Add membership" form ---
+
+const membershipAddForm = document.getElementById('membershipAddForm');
+const orgSearch = document.getElementById('orgSearch');
+const orgIdInput = document.getElementById('orgId');
+const orgAuto = document.getElementById('orgAuto');
+
+function renderOrgAuto(matches) {
+  if (!matches.length) {
+    orgAuto.classList.remove('open');
+    orgAuto.innerHTML = '';
+    return;
+  }
+  orgAuto.classList.add('open');
+  orgAuto.innerHTML = matches.slice(0, 20).map(o => `
+    <div class="acItem" data-id="${o.organization_id}">
+      ${escapeHtml(o.name)}
+      <span class="muted">(${escapeHtml(o.org_type_code || '—')}; ${o.member_count || 0} members)</span>
+    </div>
+  `).join('');
+  orgAuto.querySelectorAll('.acItem').forEach(it => {
+    it.addEventListener('mousedown', ev => {
+      ev.preventDefault();
+      const oid = Number(it.dataset.id);
+      const found = allOrgs.find(o => o.organization_id === oid);
+      orgIdInput.value = oid;
+      orgSearch.value = found ? found.name : `id ${oid}`;
+      orgAuto.classList.remove('open');
+    });
+  });
+}
+
+if (orgSearch) {
+  orgSearch.addEventListener('focus', () => { ensureOrgsLoaded(); ensurePlacesLoaded(); });
+  orgSearch.addEventListener('input', () => {
+    const q = orgSearch.value.trim().toLowerCase();
+    orgIdInput.value = '';
+    if (!q) { renderOrgAuto([]); return; }
+    const hits = allOrgs.filter(o => (o.name || '').toLowerCase().includes(q));
+    renderOrgAuto(hits);
+  });
+  orgSearch.addEventListener('blur', () => {
+    setTimeout(() => orgAuto.classList.remove('open'), 150);
+  });
+}
+
+if (membershipAddForm) {
+  membershipAddForm.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    if (!selectedPerson) return;
+    const oid = Number(orgIdInput.value || 0);
+    if (!oid) { setStatus('Pick an organization (or create a new one).', 'err'); return; }
+    const fd = new FormData(membershipAddForm);
+    const body = {
+      organization_id: oid,
+      role: fd.get('role') || null,
+      date_start: fd.get('date_start') || null,
+      date_end: fd.get('date_end') || null,
+      source_id: fd.get('source_id') ? Number(fd.get('source_id')) : null,
+      notes: fd.get('notes') || null,
+      place_id: fd.get('place_id') ? Number(fd.get('place_id')) : null,
+    };
+    try {
+      await fetchJSON(`/api/people/${selectedPerson.person_id}/memberships`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      setStatus('Membership added.', 'ok');
+      membershipAddForm.reset();
+      orgIdInput.value = '';
+      const det = membershipAddForm.closest('details');
+      if (det) det.open = false;
+      await selectPerson(selectedPerson.person_id);
+    } catch (e) {
+      setStatus(`Save failed: ${e.message}`, 'err');
+    }
+  });
+}
+
+// --- "+ New organization…" inline dialog ---
+
+const newOrgBtn = document.getElementById('newOrgBtn');
+const orgDialog = document.getElementById('orgDialog');
+const orgCreateForm = document.getElementById('orgCreateForm');
+const orgCancel = document.getElementById('orgCancel');
+const orgCancelX = document.getElementById('orgCancelX');
+
+function openOrgDialog() {
+  ensurePlacesLoaded();
+  // Populate org_type select from lookups (only first time / each open is fine)
+  orgDialog.querySelectorAll('select[data-lookup]').forEach(sel => {
+    const key = sel.getAttribute('data-lookup');
+    const items = lookups[key] || [];
+    while (sel.options.length > 1) sel.remove(1);
+    for (const it of items) {
+      const o = document.createElement('option');
+      o.value = it.code;
+      o.textContent = `${it.label} (${it.code})`;
+      sel.appendChild(o);
+    }
+  });
+  orgCreateForm.reset();
+  orgDialog.classList.remove('hidden');
+  setTimeout(() => orgCreateForm.querySelector('input[name="name"]').focus(), 50);
+}
+function closeOrgDialog() { orgDialog.classList.add('hidden'); }
+if (newOrgBtn) newOrgBtn.addEventListener('click', openOrgDialog);
+if (orgCancel) orgCancel.addEventListener('click', closeOrgDialog);
+if (orgCancelX) orgCancelX.addEventListener('click', closeOrgDialog);
+
+if (orgCreateForm) {
+  orgCreateForm.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const fd = new FormData(orgCreateForm);
+    const body = {
+      name: (fd.get('name') || '').toString().trim(),
+      org_type_code: fd.get('org_type_code') || null,
+      place_id: fd.get('place_id') ? Number(fd.get('place_id')) : null,
+      start_date: fd.get('start_date') || null,
+      end_date: fd.get('end_date') || null,
+      notes: fd.get('notes') || null,
+    };
+    if (!body.name) { setStatus('Name is required.', 'err'); return; }
+    try {
+      const created = await fetchJSON('/api/organizations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      setStatus(`Created organization "${created.name}" (id ${created.organization_id}).`, 'ok');
+      await ensureOrgsLoaded(true);
+      // Auto-pick it in the membership form.
+      orgIdInput.value = created.organization_id;
+      orgSearch.value = created.name;
+      closeOrgDialog();
+      // Make sure the membership add panel is open.
+      const det = membershipAddForm.closest('details');
+      if (det) det.open = true;
+    } catch (e) {
+      setStatus(`Create failed: ${e.message}`, 'err');
+    }
+  });
+}

@@ -5,17 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Unionism Network</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/static/styles.css?v=4" />
+    <link rel="stylesheet" href="/static/styles.css?v=5" />
   </head>
   <body>
     <header class="topbar">
       <div class="title">Unionism Network (MVP)</div>
+      <nav class="topNav">
+        <a href="/" class="navLink active">Network</a>
+        <a href="/people" class="navLink">People</a>
+        <a href="/events" class="navLink">Events</a>
+        <a href="/entry" class="navLink">Legacy entry</a>
+      </nav>
       <div class="controls">
         <a href="/entry" class="panelBtn" style="text-decoration:none;">+ Add data</a>
         <label>
           Year
           <input id="year" type="range" min="1817" max="1865" step="1" value="1832" />
-          <span id="yearLabel">1832</span>
+          <input id="yearInput" type="number" min="1817" max="1865" step="1" value="1832" class="yearNumber" />
         </label>
         <label>
           Issue
@@ -77,6 +83,6 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-    <script src="/static/app.js?v=5"></script>
+    <script src="/static/app.js?v=6"></script>
   </body>
 </html>
