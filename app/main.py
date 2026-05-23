@@ -285,6 +285,53 @@ def state(
                 e["confidence_score"] = None
                 e["justification_note"] = None
 
+        # Shared-membership edges (derived). For each pair of people who are both
+        # active members of the same organization at this year, emit a synthetic
+        # edge. Skip pairs that already have an explicit (non co-mention) edge so
+        # we don't double up.
+        shared_sql = """
+        WITH active_membership AS (
+            SELECT po.person_id, po.organization_id, o.name AS org_name
+              FROM person_organization po
+              JOIN organizations o ON o.organization_id = po.organization_id
+             WHERE """ + _interval_active_at_year("po.date_start", "po.date_end") + """
+        )
+        SELECT
+            a.person_id AS source,
+            b.person_id AS target,
+            GROUP_CONCAT(DISTINCT a.org_name) AS shared_orgs,
+            COUNT(DISTINCT a.organization_id) AS shared_count
+          FROM active_membership a
+          JOIN active_membership b
+            ON a.organization_id = b.organization_id
+           AND a.person_id < b.person_id
+         GROUP BY a.person_id, b.person_id;
+        """
+        cur = conn.execute(shared_sql, {"year": year})
+        shared_rows = [dict(r) for r in cur.fetchall()]
+
+        existing_pairs = {
+            (min(e["source"], e["target"]), max(e["source"], e["target"]))
+            for e in edges
+            if e.get("relationship_type_code") != "co_mentioned"
+        }
+        for sr in shared_rows:
+            key = (sr["source"], sr["target"])
+            if key in existing_pairs:
+                continue
+            edges.append({
+                "relationship_id": f"shared:{sr['source']}:{sr['target']}",
+                "source": sr["source"],
+                "target": sr["target"],
+                "relationship_type_code": "shared_membership",
+                "alignment_status_code": None,
+                "strength": min(sr["shared_count"], 3),
+                "shared_orgs": sr["shared_orgs"],
+                "shared_count": sr["shared_count"],
+                "source_id": None,
+                "justification_note": None,
+            })
+
         # Events (for timeline markers)
         events_sql = """
         SELECT

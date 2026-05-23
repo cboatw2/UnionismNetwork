@@ -102,6 +102,24 @@ body {
   stroke-width: 3px;
   stroke-linejoin: round;
 }
+.nodeLabel.hovered {
+  fill: #ffd24a;
+  font-weight: 600;
+}
+
+.edgeLabel {
+  font-size: 10px;
+  fill: #cfd6ff;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: #0b0c10;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.edgeLabel.hovered {
+  fill: #ffd24a;
+  font-weight: 600;
+}
 .dimmed { opacity: 0.08; }
 .searchHit { fill: #ffd24a !important; }
 

@@ -167,16 +167,52 @@ function renderNetwork(nodes, edges) {
   // Single <g> that holds everything so zoom/pan transforms it as one.
   zoomRoot = svg.append('g').attr('class', 'zoomRoot');
 
+  // Order edges so shared-membership edges render LAST (on top of co-mentions).
+  const orderedEdges = graphEdges.slice().sort((a, b) => {
+    const ra = a.relationship_type_code === 'shared_membership' ? 1 : 0;
+    const rb = b.relationship_type_code === 'shared_membership' ? 1 : 0;
+    return ra - rb;
+  });
+
   const link = zoomRoot.append('g')
     .attr('stroke-opacity', 0.7)
     .selectAll('line')
-    .data(graphEdges)
+    .data(orderedEdges)
     .join('line')
-    .attr('stroke', d => alignmentColor(d.alignment_status_code))
-    .attr('stroke-width', d => (d.strength || 1) * 1.5)
+    .attr('stroke', d => d.relationship_type_code === 'shared_membership' ? '#7aa2ff' : alignmentColor(d.alignment_status_code))
+    .attr('stroke-width', d => d.relationship_type_code === 'shared_membership' ? 3 : (d.strength || 1) * 1.5)
+    .attr('stroke-opacity', d => d.relationship_type_code === 'shared_membership' ? 1 : null)
+    .attr('stroke-dasharray', d => d.relationship_type_code === 'shared_membership' ? '6 4' : null)
     .on('click', (evt, d) => {
       evt.stopPropagation();
       selectEdge(d.relationship_id);
+    })
+    .on('mouseover', function (_evt, d) {
+      edgeLabels.filter(l => l.relationship_id === d.relationship_id)
+        .classed('hovered', true)
+        .style('display', null);
+    })
+    .on('mouseout', function (_evt, d) {
+      edgeLabels.filter(l => l.relationship_id === d.relationship_id)
+        .classed('hovered', false)
+        .style('display', 'none');
+    });
+
+  // Edge labels (hidden until hover). Show shared-membership orgs; for other
+  // edges show the relationship type so hover always gives a hint.
+  const edgeLabels = zoomRoot.append('g')
+    .selectAll('text.edgeLabel')
+    .data(graphEdges)
+    .join('text')
+    .attr('class', 'edgeLabel')
+    .attr('text-anchor', 'middle')
+    .attr('dy', -4)
+    .style('display', 'none')
+    .text(d => {
+      if (d.relationship_type_code === 'shared_membership') {
+        return `📍 ${d.shared_orgs || 'shared membership'}`;
+      }
+      return d.relationship_type_code || '';
     });
 
   const node = zoomRoot.append('g')
@@ -210,6 +246,24 @@ function renderNetwork(nodes, edges) {
     .on('click', (evt, d) => {
       evt.stopPropagation();
       selectPerson(d.person_id);
+    })
+    .on('mouseover', (_evt, d) => {
+      labels.filter(l => l.person_id === d.person_id)
+        .classed('hovered', true)
+        .style('display', null);
+    })
+    .on('mouseout', (_evt, d) => {
+      labels.filter(l => l.person_id === d.person_id)
+        .classed('hovered', false)
+        .style('display', function (l) {
+          if (filterState.showAllLabels) return null;
+          if (l.person_id === selectedPersonId) return null;
+          if (searchHits.has(l.person_id)) return null;
+          if (filterState.codedOnly && isPersonCoded(l)) return null;
+          const focus = focusedSet();
+          if (focus && focus.has(l.person_id)) return null;
+          return 'none';
+        });
     });
 
   node.append('title').text(d => d.name);
@@ -261,6 +315,10 @@ function renderNetwork(nodes, edges) {
         .attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x)
         .attr('y2', d => d.target.y);
+
+      edgeLabels
+        .attr('x', d => (d.source.x + d.target.x) / 2)
+        .attr('y', d => (d.source.y + d.target.y) / 2);
 
       node
         .attr('cx', d => d.x)
@@ -410,6 +468,7 @@ function renderDetails() {
         <div class="k">Type</div><div>${escapeHtml(e.relationship_type_code)}</div>
         <div class="k">Alignment</div><div>${escapeHtml(e.alignment_status_code || '(none)')}</div>
         <div class="k">Strength</div><div>${e.strength ?? '<span class="muted">—</span>'}</div>
+        ${e.shared_orgs ? `<div class="k">Shared orgs</div><div>${escapeHtml(e.shared_orgs)}</div>` : ''}
       </div>
       <hr/>
       <div class="muted">Evidence</div>
