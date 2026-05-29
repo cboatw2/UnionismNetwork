@@ -54,6 +54,16 @@ def events_page() -> FileResponse:
     return FileResponse(str(static_dir / "events.html"))
 
 
+@app.get("/places")
+def places_page() -> FileResponse:
+    return FileResponse(str(static_dir / "places.html"))
+
+
+@app.get("/organizations")
+def organizations_page() -> FileResponse:
+    return FileResponse(str(static_dir / "organizations.html"))
+
+
 @app.get("/api/meta")
 def meta() -> Dict[str, Any]:
     with db.get_conn() as conn:
@@ -666,12 +676,137 @@ def list_places() -> List[Dict[str, Any]]:
             conn,
             """
             SELECT place_id, place_name, place_type_code, parent_place_id,
-                   region_sc_code, modern_state
+                   latitude, longitude, region_sc_code, modern_state, notes
             FROM places
             ORDER BY place_name
             """,
         )
 
+
+@app.get("/api/places/{place_id}")
+def get_place(place_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(
+            conn,
+            """
+            SELECT p.*, par.place_name AS parent_place_name
+            FROM places p
+            LEFT JOIN places par ON par.place_id = p.parent_place_id
+            WHERE p.place_id = ?
+            """,
+            (place_id,),
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Place not found")
+        return row
+
+@app.get("/api/places/{place_id}")
+def get_place(place_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(
+            conn,
+            """
+            SELECT p.*, par.place_name AS parent_place_name
+            FROM places p
+            LEFT JOIN places par ON par.place_id = p.parent_place_id
+            WHERE p.place_id = ?
+            """,
+            (place_id,),
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Place not found")
+        return row
+
+
+class PlaceIn(BaseModel):
+    place_name: Optional[str] = None
+    place_type_code: Optional[str] = None
+    parent_place_id: Optional[int] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    region_sc_code: Optional[str] = None
+    modern_state: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@app.post("/api/places")
+def create_place(body: PlaceIn) -> Dict[str, Any]:
+    name = (body.place_name or "").strip()
+    ptype = (body.place_type_code or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="place_name is required")
+    if not ptype:
+        raise HTTPException(status_code=400, detail="place_type_code is required")
+    with db.get_conn() as conn:
+        try:
+            cur = conn.execute(
+                """
+                INSERT INTO places (place_name, place_type_code, parent_place_id,
+                                    latitude, longitude, region_sc_code, modern_state, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    name, ptype,
+                    body.parent_place_id,
+                    body.latitude,
+                    body.longitude,
+                    _none_if_blank(body.region_sc_code),
+                    _none_if_blank(body.modern_state),
+                    _none_if_blank(body.notes),
+                ),
+            )
+            conn.commit()
+            return get_place(int(cur.lastrowid))
+        except sqlite3.IntegrityError as exc:
+            raise HTTPException(status_code=400, detail=f"Insert failed: {exc}")
+
+
+@app.patch("/api/places/{place_id}")
+def update_place(place_id: int, body: PlaceIn) -> Dict[str, Any]:
+    fields: Dict[str, Any] = {}
+    if body.place_name is not None:
+        fields["place_name"] = body.place_name.strip() or None
+    if body.place_type_code is not None:
+        fields["place_type_code"] = body.place_type_code.strip() or None
+    if body.parent_place_id is not None:
+        fields["parent_place_id"] = body.parent_place_id
+    if body.latitude is not None:
+        fields["latitude"] = body.latitude
+    if body.longitude is not None:
+        fields["longitude"] = body.longitude
+    if body.region_sc_code is not None:
+        fields["region_sc_code"] = _none_if_blank(body.region_sc_code)
+    if body.modern_state is not None:
+        fields["modern_state"] = _none_if_blank(body.modern_state)
+    if body.notes is not None:
+        fields["notes"] = _none_if_blank(body.notes)
+    if not fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    sets = ", ".join(f"{k} = ?" for k in fields)
+    vals = list(fields.values()) + [place_id]
+    with db.get_conn() as conn:
+        cur = conn.execute(f"UPDATE places SET {sets} WHERE place_id = ?", vals)
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Place not found")
+        conn.commit()
+        return get_place(place_id)
+
+
+@app.delete("/api/places/{place_id}")
+def delete_place(place_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(conn, "SELECT place_id FROM places WHERE place_id = ?", (place_id,))
+        if not row:
+            raise HTTPException(status_code=404, detail="Place not found")
+        try:
+            conn.execute("DELETE FROM places WHERE place_id = ?", (place_id,))
+            conn.commit()
+        except sqlite3.IntegrityError:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot delete: organizations, events, or residences still reference this place. Remove or reassign them first.",
+            )
+        return {"deleted_place_id": place_id}
 
 def _none_if_blank(v: Any) -> Any:
     if v is None:
@@ -1423,7 +1558,7 @@ def get_organization(organization_id: int) -> Dict[str, Any]:
         row["members"] = db.fetch_all(
             conn,
             """
-            SELECT po.person_org_id, po.person_id, po.role,
+            SELECT po.person_org_id, po.person_id, po.organization_id, po.role,
                    po.date_start, po.date_end, po.source_id, po.notes,
                    COALESCE(p.display_name, p.full_name) AS person_name
             FROM person_organization po

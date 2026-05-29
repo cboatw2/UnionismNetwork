@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Unionism Network — Events</title>
-    <link rel="stylesheet" href="/static/styles.css?v=5" />
-    <link rel="stylesheet" href="/static/people.css?v=1" />
+    <title>Unionism Network — Places</title>
+    <link rel="stylesheet" href="/static/styles.css?v=7" />
+    <link rel="stylesheet" href="/static/people.css?v=2" />
   </head>
   <body class="workbench">
     <aside class="sidebar">
@@ -14,7 +14,7 @@
         <a href="/" class="sidebarLink">Network</a>
         <a href="/people" class="sidebarLink">People</a>
         <a href="/events" class="sidebarLink">Events</a>
-        <a href="/places" class="sidebarLink">Places</a>
+        <a href="/places" class="sidebarLink active">Places</a>
         <a href="/organizations" class="sidebarLink">Organizations</a>
         <a href="/entry" class="sidebarLink muted" title="Older entry form (deprecated)">Legacy entry</a>
       </nav>
@@ -25,66 +25,58 @@
 
     <main class="workbenchMain">
       <header class="workbenchHeader">
-        <div class="title">Events</div>
+        <div class="title">Places</div>
         <div class="statusBar" id="status" role="status" aria-live="polite"></div>
       </header>
 
       <div class="workbenchBody">
         <section class="listPane">
           <div class="listToolbar">
-            <button type="button" class="primaryBtn" id="newEventBtn">+ New event</button>
+            <button type="button" class="primaryBtn" id="newPlaceBtn">+ New place</button>
             <input type="search" id="listSearch" placeholder="Search name…" autocomplete="off" />
           </div>
           <div class="listFilters">
-            <label class="checkboxRow"><input type="checkbox" id="filterUsed" /> Used in characterizations only</label>
+            <label><select id="filterType"><option value="">All types</option></select></label>
           </div>
           <div class="listMeta" id="listMeta">…</div>
-          <div class="listScroll" id="eventList" role="listbox" aria-label="Events"></div>
+          <div class="listScroll" id="placeList" role="listbox" aria-label="Places"></div>
         </section>
 
         <section class="editorPane" id="editorPane">
           <div class="editorEmpty" id="editorEmpty">
-            <p class="muted">Select an event on the left, or click <strong>+ New event</strong>.</p>
+            <p class="muted">Select a place on the left, or click <strong>+ New place</strong>.</p>
           </div>
-
           <div class="editorContent hidden" id="editorContent">
             <div class="editorHeader">
               <div class="editorTitle">
-                <span id="editorEventName">—</span>
-                <span class="muted" id="editorEventId"></span>
+                <span id="editorPlaceName">—</span>
+                <span class="muted" id="editorPlaceId"></span>
               </div>
               <div class="editorActions">
                 <button type="button" class="dangerBtn" id="deleteBtn">Delete…</button>
               </div>
             </div>
-
             <section class="editorSection">
-              <h3>Event</h3>
-              <form id="eventForm" class="entryForm">
+              <h3>Place</h3>
+              <form id="placeForm" class="entryForm">
                 <div class="formGrid">
-                  <label class="fullWidth">Event name *<input name="event_name" required /></label>
-                  <label>Event type *<select name="event_type_code" data-lookup="event_type" required><option value=""></option></select></label>
-                  <label>Start date<input name="start_date" placeholder="YYYY or YYYY-MM-DD" /></label>
-                  <label>End date<input name="end_date" placeholder="YYYY or YYYY-MM-DD" /></label>
-                  <label>Place<select name="place_id"><option value=""></option></select></label>
+                  <label class="fullWidth">Place name *<input name="place_name" required /></label>
+                  <label>Type *<select name="place_type_code" data-lookup="place_type" required><option value=""></option></select></label>
+                  <label>Parent place<select name="parent_place_id"><option value="">(none)</option></select></label>
+                  <label>Latitude<input name="latitude" type="number" step="any" placeholder="e.g. 32.7765" /></label>
+                  <label>Longitude<input name="longitude" type="number" step="any" placeholder="e.g. -79.9311" /></label>
+                  <label>SC region<select name="region_sc_code" data-lookup="region_sc"><option value="">(none)</option></select></label>
+                  <label>Modern state<input name="modern_state" placeholder="e.g. SC, DC" /></label>
                 </div>
-                <label class="fullWidth">Description
-                  <textarea name="description" rows="3"></textarea>
+                <label class="fullWidth">Notes
+                  <textarea name="notes" rows="3"></textarea>
                 </label>
                 <div class="formActions">
-                  <button type="submit" class="primaryBtn" id="saveBtn">Save</button>
+                  <button type="submit" class="primaryBtn">Save</button>
                   <button type="button" class="panelBtn" id="resetBtn">Revert</button>
                   <span class="muted" id="dirtyFlag"></span>
                 </div>
               </form>
-            </section>
-
-            <section class="editorSection">
-              <h3>Relationship characterizations <span class="muted" id="charCount">(0)</span></h3>
-              <div id="charList" class="rowList"></div>
-              <p class="muted">
-                Characterizations are added from the People Workbench by editing a relationship and pointing it at this event.
-              </p>
             </section>
           </div>
         </section>
@@ -94,14 +86,12 @@
     <div id="deleteDialog" class="modalOverlay hidden" role="dialog" aria-modal="true">
       <div class="modalBox">
         <div class="modalHeader">
-          <strong>Delete event?</strong>
+          <strong>Delete place?</strong>
           <button type="button" class="panelBtn" id="deleteCancelX">×</button>
         </div>
         <div class="modalBody">
           <p>This will delete <span id="deleteWho">—</span>.</p>
-          <p class="muted">
-            Existing positions and relationship characterizations that point to it will have their <code>event_id</code> set to NULL — they remain in the database but lose their event anchor.
-          </p>
+          <p class="muted">Fails if organizations, events, residences, or child places still reference it — remove or reassign those first.</p>
           <div class="modalActions">
             <button type="button" class="panelBtn" id="deleteCancel">Cancel</button>
             <button type="button" class="dangerBtn" id="deleteConfirm">Confirm delete</button>
@@ -110,6 +100,6 @@
       </div>
     </div>
 
-    <script src="/static/events.js?v=1"></script>
+    <script src="/static/places.js?v=1"></script>
   </body>
 </html>
