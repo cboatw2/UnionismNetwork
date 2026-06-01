@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Unionism Network — Organizations</title>
+    <title>Unionism Network — Sources</title>
     <link rel="stylesheet" href="/static/styles.css?v=7" />
     <link rel="stylesheet" href="/static/people.css?v=2" />
   </head>
@@ -15,8 +15,8 @@
         <a href="/people" class="sidebarLink">People</a>
         <a href="/events" class="sidebarLink">Events</a>
         <a href="/places" class="sidebarLink">Places</a>
-        <a href="/organizations" class="sidebarLink active">Organizations</a>
-        <a href="/sources" class="sidebarLink">Sources</a>
+        <a href="/organizations" class="sidebarLink">Organizations</a>
+        <a href="/sources" class="sidebarLink active">Sources</a>
         <a href="/entry" class="sidebarLink muted" title="Older entry form (deprecated)">Legacy entry</a>
       </nav>
       <div class="sidebarFooter">
@@ -26,48 +26,57 @@
 
     <main class="workbenchMain">
       <header class="workbenchHeader">
-        <div class="title">Organizations</div>
+        <div class="title">Sources</div>
         <div class="statusBar" id="status" role="status" aria-live="polite"></div>
       </header>
 
       <div class="workbenchBody">
         <section class="listPane">
           <div class="listToolbar">
-            <button type="button" class="primaryBtn" id="newOrgBtn">+ New organization</button>
-            <input type="search" id="listSearch" placeholder="Search name…" autocomplete="off" />
+            <button type="button" class="primaryBtn" id="newSourceBtn">+ New source</button>
+            <input type="search" id="listSearch" placeholder="Search title, creator, archive…" autocomplete="off" />
           </div>
           <div class="listFilters">
             <label><select id="filterType"><option value="">All types</option></select></label>
           </div>
           <div class="listMeta" id="listMeta">…</div>
-          <div class="listScroll" id="orgList" role="listbox" aria-label="Organizations"></div>
+          <div class="listScroll" id="sourceList" role="listbox" aria-label="Sources"></div>
         </section>
 
         <section class="editorPane" id="editorPane">
           <div class="editorEmpty" id="editorEmpty">
-            <p class="muted">Select an organization on the left, or click <strong>+ New organization</strong>.</p>
+            <p class="muted">Select a source on the left, or click <strong>+ New source</strong>.</p>
           </div>
           <div class="editorContent hidden" id="editorContent">
             <div class="editorHeader">
               <div class="editorTitle">
-                <span id="editorOrgName">—</span>
-                <span class="muted" id="editorOrgId"></span>
+                <span id="editorSourceTitle">—</span>
+                <span class="muted" id="editorSourceId"></span>
               </div>
               <div class="editorActions">
                 <button type="button" class="dangerBtn" id="deleteBtn">Delete…</button>
               </div>
             </div>
+
             <section class="editorSection">
-              <h3>Organization</h3>
-              <form id="orgForm" class="entryForm">
+              <h3>Source details</h3>
+              <form id="sourceForm" class="entryForm">
                 <div class="formGrid">
-                  <label class="fullWidth">Name *<input name="name" required /></label>
-                  <label>Type *<select name="org_type_code" data-lookup="org_type" required><option value=""></option></select></label>
-                  <label>Place<select name="place_id"><option value="">(none)</option></select></label>
-                  <label>Start date<input name="start_date" placeholder="YYYY or YYYY-MM-DD" /></label>
-                  <label>End date<input name="end_date" placeholder="YYYY or YYYY-MM-DD" /></label>
+                  <label class="fullWidth">Title *<input name="title" required /></label>
+                  <label>Type *<select name="source_type_code" data-lookup="source_type" required><option value=""></option></select></label>
+                  <label>Creator<input name="creator" placeholder="Author / editor / compiler" /></label>
+                  <label>Date created<input name="date_created" placeholder="YYYY or YYYY-MM-DD" /></label>
+                  <label>Archive<input name="archive" placeholder="e.g. SCHS, SCL, LOC" /></label>
+                  <label>Collection<input name="collection" /></label>
+                  <label>Box / folder<input name="box_folder" /></label>
+                  <label class="fullWidth">URL<input name="url" type="url" placeholder="https://…" /></label>
                 </div>
-                <label class="fullWidth">Notes<textarea name="notes" rows="3"></textarea></label>
+                <label class="fullWidth">Full citation
+                  <textarea name="citation_full" rows="3"></textarea>
+                </label>
+                <label class="fullWidth">Notes
+                  <textarea name="notes" rows="3"></textarea>
+                </label>
                 <div class="formActions">
                   <button type="submit" class="primaryBtn">Save</button>
                   <button type="button" class="panelBtn" id="resetBtn">Revert</button>
@@ -75,24 +84,25 @@
                 </div>
               </form>
             </section>
+
             <section class="editorSection">
-              <h3>Members <span class="muted" id="memberCount">(0)</span></h3>
-              <div id="memberList" class="rowList"></div>
-              <p class="muted">Add members from the <a href="/people">People Workbench</a> → Memberships section.</p>
+              <h3>Used by <span class="muted" id="usageCount">(0)</span></h3>
+              <div id="usageList" class="rowList"></div>
             </section>
           </div>
         </section>
       </div>
     </main>
 
+    <!-- Delete dialog -->
     <div id="deleteDialog" class="modalOverlay hidden" role="dialog" aria-modal="true">
       <div class="modalBox">
         <div class="modalHeader">
-          <strong>Delete organization?</strong>
+          <strong>Delete source?</strong>
           <button type="button" class="panelBtn" id="deleteCancelX">×</button>
         </div>
         <div class="modalBody">
-          <p>This will delete <span id="deleteWho">—</span> and all its membership records.</p>
+          <p>Delete <span id="deleteWho">—</span>?</p>
           <div class="modalActions">
             <button type="button" class="panelBtn" id="deleteCancel">Cancel</button>
             <button type="button" class="dangerBtn" id="deleteConfirm">Confirm delete</button>
@@ -101,6 +111,6 @@
       </div>
     </div>
 
-    <script src="/static/organizations.js?v=1"></script>
+    <script src="/static/sources.js?v=1"></script>
   </body>
 </html>

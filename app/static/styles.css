@@ -83,6 +83,21 @@ body {
 }
 .checkboxRow input { accent-color: var(--accent); }
 
+.layerGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.layerGroupLabel {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 #search {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -223,6 +238,20 @@ select {
 }
 
 .k { color: var(--muted); }
+
+.layerBlock {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.layerHeader {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+  font-size: 13px;
+}
 
 hr {
   border: none;

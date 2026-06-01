@@ -72,7 +72,79 @@ const filterState = {
   hideCoMentions: true,
   focusOnSelected: true,
   showAllLabels: false,
+  allYears: false,
+  // Layer toggles. "Relationships" and "Shared membership" default ON to
+  // preserve the previous network appearance; "Co-residence" is a new opt-in.
+  layerRelationship: true,
+  layerCoResidence: false,
+  layerSharedMembership: true,
 };
+
+// --- Layered-edge helpers ----------------------------------------------------
+// Each edge from /api/state carries a `layers: []` array. Top-level fields are
+// kept for back-compat but the source of truth for what to render is the
+// filtered layer set returned by visibleLayers(e).
+
+function visibleLayers(e) {
+  if (!Array.isArray(e.layers)) return [];
+  return e.layers.filter(layer => {
+    if (layer.kind === 'relationship') {
+      if (!filterState.layerRelationship) return false;
+      if (filterState.hideCoMentions && layer.relationship_type_code === 'co_mentioned') return false;
+      return true;
+    }
+    if (layer.kind === 'shared_membership') return filterState.layerSharedMembership;
+    if (layer.kind === 'co_residence') return filterState.layerCoResidence;
+    return false;
+  });
+}
+
+function primaryVisibleLayer(layers) {
+  return layers.find(l => l.kind === 'relationship')
+      || layers.find(l => l.kind === 'shared_membership')
+      || layers.find(l => l.kind === 'co_residence')
+      || null;
+}
+
+function edgeStrokeColor(layer) {
+  if (!layer) return '#a9acb3';
+  if (layer.kind === 'relationship') return alignmentColor(layer.alignment_status_code);
+  if (layer.kind === 'shared_membership') return '#7aa2ff';
+  if (layer.kind === 'co_residence') return '#e0a458';
+  return '#a9acb3';
+}
+
+function edgeDashArray(layer) {
+  if (!layer) return null;
+  if (layer.kind === 'shared_membership') return '6 4';
+  if (layer.kind === 'co_residence') return '2 4';
+  return null;
+}
+
+function edgeStrokeWidth(layer) {
+  if (!layer) return 1.5;
+  if (layer.kind === 'relationship') return (layer.strength || 1) * 1.5;
+  if (layer.kind === 'shared_membership') return 3;
+  if (layer.kind === 'co_residence') return 2.5;
+  return 1.5;
+}
+
+function layerLabel(l) {
+  if (l.kind === 'relationship') return l.relationship_type_code || 'relationship';
+  if (l.kind === 'shared_membership') {
+    const orgs = l.orgs || '';
+    return l.count > 1 ? `shared orgs (${l.count}): ${orgs}` : `shared org: ${orgs}`;
+  }
+  if (l.kind === 'co_residence') {
+    const place = l.place_name || '';
+    return l.count > 1 ? `co-residence (${l.count} places): ${place}` : `co-residence: ${place}`;
+  }
+  return l.kind;
+}
+
+function edgeKey(e) {
+  return e.edge_id || e.relationship_id;
+}
 
 function svgSize() {
   const rect = document.getElementById('network').getBoundingClientRect();
@@ -122,9 +194,9 @@ function applyFilters(nodes, edges) {
     filteredNodes = filteredNodes.filter(isPersonCoded);
   }
 
-  if (filterState.hideCoMentions) {
-    filteredEdges = filteredEdges.filter(e => !isCoMentionEdge(e));
-  }
+  // Drop edges that have no visible layer under the current toggles.
+  // (hideCoMentions is now folded into visibleLayers as a within-layer filter.)
+  filteredEdges = filteredEdges.filter(e => visibleLayers(e).length > 0);
 
   // Keep only edges whose endpoints survived the node filter.
   const keepIds = new Set(filteredNodes.map(n => n.person_id));
@@ -144,7 +216,11 @@ function renderNetwork(nodes, edges) {
   const graphNodes = filteredNodes.map(n => ({ ...n }));
   const graphEdges = filteredEdges
     .filter(e => nodeById.has(e.source) && nodeById.has(e.target))
-    .map(e => ({ ...e }));
+    .map(e => {
+      const vis = visibleLayers(e);
+      const primary = primaryVisibleLayer(vis);
+      return { ...e, _visibleLayers: vis, _primaryLayer: primary };
+    });
 
   // Compute neighbor map for focus mode.
   const neighborMap = new Map();
@@ -167,10 +243,12 @@ function renderNetwork(nodes, edges) {
   // Single <g> that holds everything so zoom/pan transforms it as one.
   zoomRoot = svg.append('g').attr('class', 'zoomRoot');
 
-  // Order edges so shared-membership edges render LAST (on top of co-mentions).
+  // Order edges so derived layers (shared_membership / co_residence) render
+  // on top of explicit relationships when they are the primary layer.
+  const layerOrder = { relationship: 0, co_residence: 1, shared_membership: 2 };
   const orderedEdges = graphEdges.slice().sort((a, b) => {
-    const ra = a.relationship_type_code === 'shared_membership' ? 1 : 0;
-    const rb = b.relationship_type_code === 'shared_membership' ? 1 : 0;
+    const ra = layerOrder[a._primaryLayer?.kind] ?? 0;
+    const rb = layerOrder[b._primaryLayer?.kind] ?? 0;
     return ra - rb;
   });
 
@@ -179,27 +257,28 @@ function renderNetwork(nodes, edges) {
     .selectAll('line')
     .data(orderedEdges)
     .join('line')
-    .attr('stroke', d => d.relationship_type_code === 'shared_membership' ? '#7aa2ff' : alignmentColor(d.alignment_status_code))
-    .attr('stroke-width', d => d.relationship_type_code === 'shared_membership' ? 3 : (d.strength || 1) * 1.5)
-    .attr('stroke-opacity', d => d.relationship_type_code === 'shared_membership' ? 1 : null)
-    .attr('stroke-dasharray', d => d.relationship_type_code === 'shared_membership' ? '6 4' : null)
+    .attr('stroke', d => edgeStrokeColor(d._primaryLayer))
+    .attr('stroke-width', d => edgeStrokeWidth(d._primaryLayer))
+    .attr('stroke-opacity', d => d._primaryLayer?.kind === 'relationship' ? null : 1)
+    .attr('stroke-dasharray', d => edgeDashArray(d._primaryLayer))
     .on('click', (evt, d) => {
       evt.stopPropagation();
-      selectEdge(d.relationship_id);
+      selectEdge(edgeKey(d));
     })
     .on('mouseover', function (_evt, d) {
-      edgeLabels.filter(l => l.relationship_id === d.relationship_id)
+      const key = edgeKey(d);
+      edgeLabels.filter(l => edgeKey(l) === key)
         .classed('hovered', true)
         .style('display', null);
     })
     .on('mouseout', function (_evt, d) {
-      edgeLabels.filter(l => l.relationship_id === d.relationship_id)
+      const key = edgeKey(d);
+      edgeLabels.filter(l => edgeKey(l) === key)
         .classed('hovered', false)
         .style('display', 'none');
     });
 
-  // Edge labels (hidden until hover). Show shared-membership orgs; for other
-  // edges show the relationship type so hover always gives a hint.
+  // Edge labels (hidden until hover). Show every visible layer joined by ' · '.
   const edgeLabels = zoomRoot.append('g')
     .selectAll('text.edgeLabel')
     .data(graphEdges)
@@ -208,12 +287,20 @@ function renderNetwork(nodes, edges) {
     .attr('text-anchor', 'middle')
     .attr('dy', -4)
     .style('display', 'none')
-    .text(d => {
-      if (d.relationship_type_code === 'shared_membership') {
-        return `📍 ${d.shared_orgs || 'shared membership'}`;
-      }
-      return d.relationship_type_code || '';
-    });
+    .text(d => (d._visibleLayers || []).map(layerLabel).join('  ·  '));
+
+  // Small badge near midpoint when an edge bundles more than one visible layer.
+  const edgeBadges = zoomRoot.append('g')
+    .selectAll('text.edgeBadge')
+    .data(graphEdges.filter(d => (d._visibleLayers || []).length > 1))
+    .join('text')
+    .attr('class', 'edgeBadge')
+    .attr('text-anchor', 'middle')
+    .attr('dy', 4)
+    .attr('fill', '#cfd6ff')
+    .attr('font-size', 10)
+    .style('pointer-events', 'none')
+    .text(d => `·${d._visibleLayers.length}`);
 
   const node = zoomRoot.append('g')
     .selectAll('circle')
@@ -317,6 +404,10 @@ function renderNetwork(nodes, edges) {
         .attr('y2', d => d.target.y);
 
       edgeLabels
+        .attr('x', d => (d.source.x + d.target.x) / 2)
+        .attr('y', d => (d.source.y + d.target.y) / 2);
+
+      edgeBadges
         .attr('x', d => (d.source.x + d.target.x) / 2)
         .attr('y', d => (d.source.y + d.target.y) / 2);
 
@@ -429,7 +520,7 @@ function renderDetails() {
       <div class="kv">
         <div class="k">Person</div><div>${escapeHtml(p.name)}</div>
         <div class="k">Issue</div><div>${escapeHtml(state.issue)}</div>
-        <div class="k">Year</div><div>${escapeHtml(state.year)}</div>
+        <div class="k">Year</div><div>${state.year === 0 ? 'All years' : escapeHtml(state.year)}</div>
         <div class="k">Map place</div><div>${place ? escapeHtml(place.place_name) : '<span class="muted">(none)</span>'}</div>
         <div class="k">Label</div><div>${p.position_label_code ? escapeHtml(p.position_label_code) : '<span class="muted">(no coded position)</span>'}</div>
       </div>
@@ -453,32 +544,55 @@ function renderDetails() {
   }
 
   if (selectedEdgeId != null) {
-    const e = state.edges.find(x => x.relationship_id === selectedEdgeId);
+    const e = state.edges.find(x => edgeKey(x) === selectedEdgeId);
     if (!e) return;
 
     const source = state.nodes.find(n => n.person_id === e.source);
     const target = state.nodes.find(n => n.person_id === e.target);
-    const src = e.source_id ? sourcesById.get(e.source_id) : null;
+    const vis = visibleLayers(e);
+
+    const layerBlocks = vis.map(layer => {
+      const lsrc = layer.source_id ? sourcesById.get(layer.source_id) : null;
+      if (layer.kind === 'relationship') {
+        return `
+          <div class="layerBlock">
+            <div class="layerHeader">Relationship · ${escapeHtml(layer.relationship_type_code || '')}</div>
+            <div class="kv">
+              <div class="k">Alignment</div><div>${escapeHtml(layer.alignment_status_code || '(none)')}</div>
+              <div class="k">Strength</div><div>${layer.strength ?? '<span class="muted">—</span>'}</div>
+            </div>
+            <div class="muted" style="margin-top:6px">Evidence</div>
+            <div style="margin-top:4px">${layer.justification_note ? escapeHtml(layer.justification_note) : '<span class="muted">(baseline; no issue-specific characterization active)</span>'}</div>
+            ${lsrc ? `<div style="margin-top:6px" class="muted">Citation: ${escapeHtml(lsrc.citation_full || lsrc.title || '')}</div>` : ''}
+          </div>`;
+      }
+      if (layer.kind === 'shared_membership') {
+        return `
+          <div class="layerBlock">
+            <div class="layerHeader">Shared membership${layer.count > 1 ? ` · ${layer.count} orgs` : ''}</div>
+            <div style="margin-top:4px">${escapeHtml(layer.orgs || '')}</div>
+          </div>`;
+      }
+      if (layer.kind === 'co_residence') {
+        const places = (layer.places || []).map(p => escapeHtml(p.place_name)).join(', ') || escapeHtml(layer.place_name || '');
+        return `
+          <div class="layerBlock">
+            <div class="layerHeader">Co-residence${layer.count > 1 ? ` · ${layer.count} places` : ''}</div>
+            <div style="margin-top:4px">${places}</div>
+          </div>`;
+      }
+      return '';
+    }).join('');
 
     detailsEl.innerHTML = `
       <div class="kv">
         <div class="k">Edge</div><div>${escapeHtml(source?.name)}  ↔  ${escapeHtml(target?.name)}</div>
         <div class="k">Issue</div><div>${escapeHtml(state.issue)}</div>
-        <div class="k">Year</div><div>${escapeHtml(state.year)}</div>
-        <div class="k">Type</div><div>${escapeHtml(e.relationship_type_code)}</div>
-        <div class="k">Alignment</div><div>${escapeHtml(e.alignment_status_code || '(none)')}</div>
-        <div class="k">Strength</div><div>${e.strength ?? '<span class="muted">—</span>'}</div>
-        ${e.shared_orgs ? `<div class="k">Shared orgs</div><div>${escapeHtml(e.shared_orgs)}</div>` : ''}
+        <div class="k">Year</div><div>${state.year === 0 ? 'All years' : escapeHtml(state.year)}</div>
+        <div class="k">Layers</div><div>${vis.length} visible${e.layers && e.layers.length !== vis.length ? ` <span class="muted">(${e.layers.length - vis.length} hidden by filters)</span>` : ''}</div>
       </div>
       <hr/>
-      <div class="muted">Evidence</div>
-      <div style="margin-top:6px">${e.justification_note ? escapeHtml(e.justification_note) : '<span class="muted">(baseline relationship; no issue-specific characterization active)</span>'}</div>
-      ${src ? `
-        <hr/>
-        <div class="muted">Citation</div>
-        <div style="margin-top:6px">${escapeHtml(src.citation_full || src.title || '')}</div>
-        ${src.url ? `<div style="margin-top:6px"><a href="${escapeHtml(src.url)}" target="_blank" rel="noopener">Source link</a></div>` : ''}
-      ` : ''}
+      ${layerBlocks || '<div class="muted">(no visible layers)</div>'}
     `;
     return;
   }
@@ -524,7 +638,7 @@ async function loadMeta() {
 }
 
 async function loadState() {
-  const year = parseInt(yearInput.value, 10);
+  const year = filterState.allYears ? 0 : parseInt(yearInput.value, 10);
   const issue = issueSelect.value;
   const scale = scaleSelect.value;
 
@@ -541,8 +655,12 @@ async function loadState() {
 
 function render() {
   if (!state) return;
-  yearInput.value = String(state.year);
-  yearLabel.value = String(state.year);
+  // Keep the year inputs in sync with the response unless we're in all-years mode,
+  // in which case the server echoes year=0 (sentinel) and the inputs stay disabled.
+  if (!filterState.allYears) {
+    yearInput.value = String(state.year);
+    yearLabel.value = String(state.year);
+  }
 
   renderMap(state.nodes);
   renderNetwork(state.nodes, state.edges);
@@ -615,6 +733,51 @@ function wireControls() {
     filterState.showAllLabels = labelsCb.checked;
     render();
   });
+
+  // All-years toggle: disables the year inputs and sends year=0 sentinel.
+  const allYearsCb = document.getElementById('allYears');
+  if (allYearsCb) {
+    const syncYearDisabled = () => {
+      yearInput.disabled = filterState.allYears;
+      yearLabel.disabled = filterState.allYears;
+      yearInput.style.opacity = filterState.allYears ? '0.4' : '';
+      yearLabel.style.opacity = filterState.allYears ? '0.4' : '';
+    };
+    filterState.allYears = allYearsCb.checked;
+    syncYearDisabled();
+    allYearsCb.addEventListener('change', async () => {
+      filterState.allYears = allYearsCb.checked;
+      syncYearDisabled();
+      await loadState();
+      render();
+    });
+  }
+
+  // Layer toggles.
+  const layerRel = document.getElementById('layerRelationship');
+  if (layerRel) {
+    filterState.layerRelationship = layerRel.checked;
+    layerRel.addEventListener('change', () => {
+      filterState.layerRelationship = layerRel.checked;
+      render();
+    });
+  }
+  const layerCo = document.getElementById('layerCoResidence');
+  if (layerCo) {
+    filterState.layerCoResidence = layerCo.checked;
+    layerCo.addEventListener('change', () => {
+      filterState.layerCoResidence = layerCo.checked;
+      render();
+    });
+  }
+  const layerSm = document.getElementById('layerSharedMembership');
+  if (layerSm) {
+    filterState.layerSharedMembership = layerSm.checked;
+    layerSm.addEventListener('change', () => {
+      filterState.layerSharedMembership = layerSm.checked;
+      render();
+    });
+  }
 
   const expandBtn = document.getElementById('networkExpand');
   const networkPanel = document.getElementById('networkPanel');

@@ -19,12 +19,20 @@ def _year_from_date_expr(col: str) -> str:
     return f"CAST(substr({col}, 1, 4) AS INTEGER)"
 
 
-def _interval_active_at_year(start_col: str, end_col: str, year_param: str = ":year") -> str:
+def _interval_active_at_year(start_col: str, end_col: str,
+                              year_min_param: str = ":year_min",
+                              year_max_param: str = ":year_max") -> str:
+    """SQL fragment matching rows whose interval overlaps a year window.
+
+    With year_min == year_max == Y this matches rows active at year Y (the
+    original point-in-time semantics). With a wide window (e.g. -9999..9999)
+    it matches every row regardless of date, enabling an "all years" view.
+    """
     start_year = _year_from_date_expr(start_col)
     end_year = _year_from_date_expr(end_col)
     return (
-        f"(({start_col} IS NULL) OR ({start_year} IS NOT NULL AND {start_year} <= {year_param})) "
-        f"AND (({end_col} IS NULL) OR ({end_year} IS NOT NULL AND {end_year} >= {year_param}))"
+        f"(({start_col} IS NULL) OR ({start_year} IS NOT NULL AND {start_year} <= {year_max_param})) "
+        f"AND (({end_col} IS NULL) OR ({end_year} IS NOT NULL AND {end_year} >= {year_min_param}))"
     )
 
 
@@ -64,6 +72,10 @@ def organizations_page() -> FileResponse:
     return FileResponse(str(static_dir / "organizations.html"))
 
 
+@app.get("/sources")
+def sources_page() -> FileResponse:
+    return FileResponse(str(static_dir / "sources.html"))
+
 @app.get("/api/meta")
 def meta() -> Dict[str, Any]:
     with db.get_conn() as conn:
@@ -81,7 +93,7 @@ def meta() -> Dict[str, Any]:
         )
 
     return {
-        "years": {"min": 1817, "max": 1865, "step": 1},
+        "years": {"min": 1779, "max": 1865, "step": 1},
         "issues": issues,
         "scales": scales,
         "people": people,
@@ -90,10 +102,14 @@ def meta() -> Dict[str, Any]:
 
 @app.get("/api/state")
 def state(
-    year: int = Query(..., ge=1500, le=2100),
+    year: int = Query(..., ge=0, le=2100),
     issue: str = Query("nullification"),
     scale: Optional[str] = Query(None),
 ) -> Dict[str, Any]:
+    # year == 0 is the sentinel for "all years" (no temporal filter).
+    all_years = (year == 0)
+    year_min = -9999 if all_years else year
+    year_max = 9999 if all_years else year
     with db.get_conn() as conn:
         # People / nodes
         nodes_sql = """
@@ -195,7 +211,7 @@ def state(
         ORDER BY name;
         """
 
-        cur = conn.execute(nodes_sql, {"year": year, "issue": issue})
+        cur = conn.execute(nodes_sql, {"year_min": year_min, "year_max": year_max, "issue": issue})
         nodes = [dict(r) for r in cur.fetchall()]
 
         place_ids = {n.get("map_place_id") for n in nodes if n.get("map_place_id") is not None}
@@ -283,7 +299,7 @@ def state(
         WHERE """ + _interval_active_at_year("rel.start_date", "rel.end_date") + """;
         """
 
-        cur = conn.execute(edges_sql, {"year": year, "issue": issue, "scale": scale})
+        cur = conn.execute(edges_sql, {"year_min": year_min, "year_max": year_max, "issue": issue, "scale": scale})
         edges = [dict(r) for r in cur.fetchall()]
 
         # Normalize: if no characterization active, fall back to baseline
@@ -295,10 +311,38 @@ def state(
                 e["confidence_score"] = None
                 e["justification_note"] = None
 
-        # Shared-membership edges (derived). For each pair of people who are both
-        # active members of the same organization at this year, emit a synthetic
-        # edge. Skip pairs that already have an explicit (non co-mention) edge so
-        # we don't double up.
+        # ------------------------------------------------------------------
+        # Layered edges: one edge per (low, high) pair, carrying a layers[]
+        # array. Layer kinds:
+        #   - "relationship"       : explicit row in `relationships`
+        #   - "shared_membership"  : co-membership in an organization at year
+        #   - "co_residence"       : both have an active residence at the same
+        #                            place at year
+        # Top-level fields (alignment_status_code, strength, relationship_type_code,
+        # source_id, justification_note, shared_orgs, shared_count, relationship_id)
+        # are derived from the "primary" layer (relationship preferred) for
+        # back-compat with existing frontend rendering.
+        # ------------------------------------------------------------------
+
+        from collections import defaultdict
+        pair_layers: Dict[tuple, List[Dict[str, Any]]] = defaultdict(list)
+
+        # 1) Relationship layers from the rows we just fetched.
+        for e in edges:
+            low = min(e["source"], e["target"])
+            high = max(e["source"], e["target"])
+            pair_layers[(low, high)].append({
+                "kind": "relationship",
+                "relationship_id": e["relationship_id"],
+                "relationship_type_code": e["relationship_type_code"],
+                "alignment_status_code": e.get("alignment_status_code"),
+                "strength": e.get("strength"),
+                "source_id": e.get("source_id"),
+                "justification_note": e.get("justification_note"),
+                "confidence_score": e.get("confidence_score"),
+            })
+
+        # 2) Shared-membership layers (derived).
         shared_sql = """
         WITH active_membership AS (
             SELECT po.person_id, po.organization_id, o.name AS org_name
@@ -317,30 +361,82 @@ def state(
            AND a.person_id < b.person_id
          GROUP BY a.person_id, b.person_id;
         """
-        cur = conn.execute(shared_sql, {"year": year})
-        shared_rows = [dict(r) for r in cur.fetchall()]
-
-        existing_pairs = {
-            (min(e["source"], e["target"]), max(e["source"], e["target"]))
-            for e in edges
-            if e.get("relationship_type_code") != "co_mentioned"
-        }
-        for sr in shared_rows:
-            key = (sr["source"], sr["target"])
-            if key in existing_pairs:
-                continue
-            edges.append({
-                "relationship_id": f"shared:{sr['source']}:{sr['target']}",
-                "source": sr["source"],
-                "target": sr["target"],
-                "relationship_type_code": "shared_membership",
-                "alignment_status_code": None,
-                "strength": min(sr["shared_count"], 3),
-                "shared_orgs": sr["shared_orgs"],
-                "shared_count": sr["shared_count"],
-                "source_id": None,
-                "justification_note": None,
+        cur = conn.execute(shared_sql, {"year_min": year_min, "year_max": year_max})
+        for sr in cur.fetchall():
+            sr = dict(sr)
+            pair_layers[(sr["source"], sr["target"])].append({
+                "kind": "shared_membership",
+                "orgs": sr["shared_orgs"],
+                "count": sr["shared_count"],
             })
+
+        # 3) Co-residence layers (derived).
+        co_residence_sql = """
+        WITH active_residence AS (
+            SELECT r.person_id, r.place_id, r.residence_type_code,
+                   r.date_start, r.date_end,
+                   pl.place_name
+              FROM person_place_residence r
+              JOIN places pl ON pl.place_id = r.place_id
+             WHERE """ + _interval_active_at_year("r.date_start", "r.date_end") + """
+        )
+        SELECT a.person_id AS source, b.person_id AS target,
+               a.place_id, a.place_name,
+               a.date_start AS a_start, a.date_end AS a_end,
+               b.date_start AS b_start, b.date_end AS b_end
+          FROM active_residence a
+          JOIN active_residence b
+            ON a.place_id = b.place_id
+           AND a.person_id < b.person_id;
+        """
+        cur = conn.execute(co_residence_sql, {"year_min": year_min, "year_max": year_max})
+        # Multiple rows possible for one pair (different places). Group them.
+        co_pair_places: Dict[tuple, List[Dict[str, Any]]] = defaultdict(list)
+        for cr in cur.fetchall():
+            cr = dict(cr)
+            co_pair_places[(cr["source"], cr["target"])].append({
+                "place_id": cr["place_id"],
+                "place_name": cr["place_name"],
+            })
+        for key, places_list in co_pair_places.items():
+            pair_layers[key].append({
+                "kind": "co_residence",
+                "places": places_list,
+                "place_name": ", ".join(p["place_name"] for p in places_list),
+                "count": len(places_list),
+            })
+
+        # 4) Collapse pair_layers into one edge per pair.
+        layered_edges: List[Dict[str, Any]] = []
+        for (low, high), layers in pair_layers.items():
+            primary = next((l for l in layers if l["kind"] == "relationship"), None) or layers[0]
+            sm = next((l for l in layers if l["kind"] == "shared_membership"), None)
+            cr_layer = next((l for l in layers if l["kind"] == "co_residence"), None)
+            edge = {
+                "edge_id": f"pair:{low}:{high}",
+                "source": low,
+                "target": high,
+                "layers": layers,
+                # Back-compat: surface "primary" layer fields at top level.
+                "relationship_id": primary.get("relationship_id") or f"pair:{low}:{high}",
+                "relationship_type_code": primary.get("relationship_type_code") or primary["kind"],
+                "alignment_status_code": primary.get("alignment_status_code"),
+                "strength": primary.get("strength")
+                            or (sm.get("count") if sm else None)
+                            or (cr_layer.get("count") if cr_layer else None),
+                "source_id": primary.get("source_id"),
+                "justification_note": primary.get("justification_note"),
+                "confidence_score": primary.get("confidence_score"),
+            }
+            if sm:
+                edge["shared_orgs"] = sm.get("orgs")
+                edge["shared_count"] = sm.get("count")
+            if cr_layer:
+                edge["co_residence_place"] = cr_layer.get("place_name")
+                edge["co_residence_count"] = cr_layer.get("count")
+            layered_edges.append(edge)
+
+        edges = layered_edges
 
         # Events (for timeline markers)
         events_sql = """
@@ -357,10 +453,11 @@ def state(
         ORDER BY """ + _year_from_date_expr("start_date") + """;
         """
 
-        cur = conn.execute(events_sql, {"year": year})
+        cur = conn.execute(events_sql, {"year_min": year_min, "year_max": year_max})
         events = [dict(r) for r in cur.fetchall()]
 
-        # Sources referenced by nodes/edges
+        # Sources referenced by nodes/edges (walk all layers per edge so the
+        # frontend can resolve sources from any layer, not just the primary).
         source_ids = set()
         for n in nodes:
             if n.get("stance_source_id"):
@@ -368,6 +465,9 @@ def state(
         for e in edges:
             if e.get("source_id"):
                 source_ids.add(e["source_id"])
+            for layer in e.get("layers", []):
+                if layer.get("source_id"):
+                    source_ids.add(layer["source_id"])
 
         sources: List[Dict[str, Any]] = []
         if source_ids:
@@ -496,7 +596,7 @@ def get_person(person_id: int) -> Dict[str, Any]:
                    r.person_low_id, r.person_high_id,
                    r.relationship_type_code, r.alignment_status_code,
                    r.start_date, r.end_date, r.strength,
-                   r.source_id, r.notes,
+                                      r.source_id, r.notes,
                    CASE WHEN r.person_low_id = ? THEN r.person_high_id ELSE r.person_low_id END AS other_person_id,
                    (SELECT COALESCE(p2.display_name, p2.full_name)
                       FROM people p2
@@ -521,6 +621,19 @@ def get_person(person_id: int) -> Dict[str, Any]:
             LEFT JOIN places pl ON pl.place_id = o.place_id
             WHERE po.person_id = ?
             ORDER BY po.date_start, po.person_org_id
+            """,
+            (person_id,),
+        )
+        row["residences"] = db.fetch_all(
+            conn,
+            """
+            SELECT r.residence_id, r.person_id, r.place_id, r.residence_type_code,
+                   r.date_start, r.date_end, r.source_id, r.notes,
+                   pl.place_name
+            FROM person_place_residence r
+            JOIN places pl ON pl.place_id = r.place_id
+            WHERE r.person_id = ?
+            ORDER BY r.date_start, r.residence_id
             """,
             (person_id,),
         )
@@ -1173,6 +1286,109 @@ def create_source(body: SourceIn) -> Dict[str, Any]:
         except Exception as exc:
             raise HTTPException(status_code=400, detail=f"Insert failed: {exc}")
 
+@app.get("/api/sources/{source_id}")
+def get_source(source_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(
+            conn,
+            "SELECT * FROM sources WHERE source_id = ?",
+            (source_id,),
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Source not found")
+        row["usages"] = db.fetch_all(
+            conn,
+            """
+            SELECT COALESCE(p.display_name, p.full_name) AS person_name, p.person_id,
+                   'position' AS usage_type, pos.position_label_code AS detail
+            FROM positions pos
+            JOIN people p ON p.person_id = pos.person_id
+            WHERE pos.source_id = ?
+            UNION ALL
+            SELECT COALESCE(p.display_name, p.full_name), p.person_id,
+                   'membership', o.name
+            FROM person_organization po
+            JOIN people p ON p.person_id = po.person_id
+            JOIN organizations o ON o.organization_id = po.organization_id
+            WHERE po.source_id = ?
+            UNION ALL
+            SELECT COALESCE(p.display_name, p.full_name), p.person_id,
+                   'relationship', COALESCE(p2.display_name, p2.full_name)
+            FROM relationships r
+            JOIN people p ON p.person_id = r.person_low_id
+            JOIN people p2 ON p2.person_id = r.person_high_id
+            WHERE r.source_id = ?
+            UNION ALL
+            SELECT COALESCE(p.display_name, p.full_name), p.person_id,
+                   'characterization', COALESCE(e.event_name, '(no event)')
+            FROM relationship_characterizations rc
+            JOIN relationships r ON r.relationship_id = rc.relationship_id
+            JOIN people p ON p.person_id = r.person_low_id
+            LEFT JOIN events e ON e.event_id = rc.event_id
+            WHERE rc.source_id = ?
+            ORDER BY person_name, usage_type
+            """,
+            (source_id, source_id, source_id, source_id),
+        )
+        return row
+
+
+class SourceUpdate(BaseModel):
+    source_type_code: Optional[str] = None
+    title: Optional[str] = None
+    creator: Optional[str] = None
+    date_created: Optional[str] = None
+    archive: Optional[str] = None
+    collection: Optional[str] = None
+    box_folder: Optional[str] = None
+    url: Optional[str] = None
+    citation_full: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@app.patch("/api/sources/{source_id}")
+def update_source(source_id: int, body: SourceUpdate) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        if not db.fetch_one(conn, "SELECT source_id FROM sources WHERE source_id = ?", (source_id,)):
+            raise HTTPException(status_code=404, detail="Source not found")
+        fields = [
+            "source_type_code", "title", "creator", "date_created",
+            "archive", "collection", "box_folder", "url", "citation_full", "notes",
+        ]
+        updates = {f: _none_if_blank(getattr(body, f)) for f in fields if getattr(body, f) is not None}
+        if updates:
+            set_clause = ", ".join(f"{k} = ?" for k in updates)
+            conn.execute(
+                f"UPDATE sources SET {set_clause} WHERE source_id = ?",
+                (*updates.values(), source_id),
+            )
+            conn.commit()
+    return get_source(source_id)
+
+
+@app.delete("/api/sources/{source_id}")
+def delete_source(source_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        if not db.fetch_one(conn, "SELECT source_id FROM sources WHERE source_id = ?", (source_id,)):
+            raise HTTPException(status_code=404, detail="Source not found")
+        usage = db.fetch_one(
+            conn,
+            """
+            SELECT (SELECT COUNT(*) FROM positions               WHERE source_id = ?)
+                 + (SELECT COUNT(*) FROM relationships           WHERE source_id = ?)
+                 + (SELECT COUNT(*) FROM person_organization     WHERE source_id = ?)
+                 + (SELECT COUNT(*) FROM relationship_characterizations WHERE source_id = ?) AS total
+            """,
+            (source_id, source_id, source_id, source_id),
+        )
+        if usage and usage.get("total", 0) > 0:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Source referenced in {usage['total']} record(s). Remove references first.",
+            )
+        conn.execute("DELETE FROM sources WHERE source_id = ?", (source_id,))
+        conn.commit()
+        return {"deleted_source_id": source_id}
 
 class PositionIn(BaseModel):
     person_id: int
@@ -1412,6 +1628,49 @@ def delete_relationship(relationship_id: int) -> Dict[str, Any]:
         conn.execute("DELETE FROM relationships WHERE relationship_id = ?", (relationship_id,))
         conn.commit()
         return {"deleted_relationship_id": relationship_id}
+
+
+class RelationshipUpdate(BaseModel):
+    relationship_type_code: str
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    strength: Optional[int] = None
+    alignment_status_code: Optional[str] = None
+    source_id: Optional[int] = None
+    notes: Optional[str] = None
+
+
+@app.patch("/api/relationships/{relationship_id}")
+def update_relationship(relationship_id: int, body: RelationshipUpdate) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(conn, "SELECT relationship_id FROM relationships WHERE relationship_id = ?", (relationship_id,))
+        if not row:
+            raise HTTPException(status_code=404, detail="Relationship not found")
+        try:
+            conn.execute(
+                """
+                UPDATE relationships SET
+                  relationship_type_code = ?,
+                  start_date = ?, end_date = ?,
+                  strength = ?, alignment_status_code = ?,
+                  source_id = ?, notes = ?
+                WHERE relationship_id = ?
+                """,
+                (
+                    body.relationship_type_code,
+                    _none_if_blank(body.start_date),
+                    _none_if_blank(body.end_date),
+                    body.strength,
+                    _none_if_blank(body.alignment_status_code),
+                    body.source_id,
+                    _none_if_blank(body.notes),
+                    relationship_id,
+                ),
+            )
+            conn.commit()
+            return db.fetch_one(conn, "SELECT * FROM relationships WHERE relationship_id = ?", (relationship_id,))
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Update failed: {exc}")
 
 
 class CharacterizationIn(BaseModel):
@@ -1760,3 +2019,62 @@ def delete_membership(person_org_id: int) -> Dict[str, Any]:
         )
         conn.commit()
         return {"deleted_person_org_id": person_org_id}
+
+
+class ResidenceIn(BaseModel):
+    place_id: int
+    residence_type_code: Optional[str] = "household"
+    date_start: Optional[str] = None
+    date_end: Optional[str] = None
+    source_id: Optional[int] = None
+    notes: Optional[str] = None
+
+
+@app.post("/api/people/{person_id}/residences")
+def add_residence(person_id: int, body: ResidenceIn) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        person = db.fetch_one(conn, "SELECT person_id FROM people WHERE person_id = ?", (person_id,))
+        if not person:
+            raise HTTPException(status_code=404, detail="Person not found")
+        try:
+            cur = conn.execute(
+                """
+                INSERT INTO person_place_residence
+                  (person_id, place_id, residence_type_code,
+                   date_start, date_end, source_id, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    person_id,
+                    body.place_id,
+                    body.residence_type_code or "household",
+                    _none_if_blank(body.date_start),
+                    _none_if_blank(body.date_end),
+                    body.source_id,
+                    _none_if_blank(body.notes),
+                ),
+            )
+            new_id = int(cur.lastrowid)
+            conn.commit()
+            return db.fetch_one(
+                conn,
+                """
+                SELECT r.*, pl.place_name FROM person_place_residence r
+                JOIN places pl ON pl.place_id = r.place_id
+                WHERE r.residence_id = ?
+                """,
+                (new_id,),
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Insert failed: {exc}")
+
+
+@app.delete("/api/residences/{residence_id}")
+def delete_residence(residence_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(conn, "SELECT residence_id FROM person_place_residence WHERE residence_id = ?", (residence_id,))
+        if not row:
+            raise HTTPException(status_code=404, detail="Residence not found")
+        conn.execute("DELETE FROM person_place_residence WHERE residence_id = ?", (residence_id,))
+        conn.commit()
+        return {"deleted_residence_id": residence_id}

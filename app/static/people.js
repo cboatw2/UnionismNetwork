@@ -32,6 +32,8 @@ const relationshipList = document.getElementById('relationshipList');
 const relationshipCountEl = document.getElementById('relationshipCount');
 const membershipList = document.getElementById('membershipList');
 const membershipCountEl = document.getElementById('membershipCount');
+const residenceList = document.getElementById('residenceList');
+const residenceCountEl = document.getElementById('residenceCount');
 
 const deleteBtn = document.getElementById('deleteBtn');
 const deleteDialog = document.getElementById('deleteDialog');
@@ -358,6 +360,8 @@ newPersonBtn.addEventListener('click', () => {
   relationshipCountEl.textContent = '(0)';
   membershipList.innerHTML = '<div class="muted">Save the person first to add memberships.</div>';
   membershipCountEl.textContent = '(0)';
+  residenceList.innerHTML = '<div class="muted">Save the person first to add residences.</div>';
+  residenceCountEl.textContent = '(0)';
   showEditor();
   bioForm.querySelector('input[name="full_name"]').focus();
 });
@@ -376,6 +380,7 @@ async function selectPerson(personId) {
     renderPositions(p.positions || []);
     renderRelationships(p.relationships || []);
     renderMemberships(p.memberships || []);
+    renderResidences(p.residences || []);
     document.querySelectorAll('.listRow.selected').forEach(r => r.classList.remove('selected'));
     const row = listEl.querySelector(`.listRow[data-person-id="${personId}"]`);
     if (row) {
@@ -432,7 +437,10 @@ function renderPositions(positions) {
     positionList.innerHTML = '<div class="muted">No positions yet.</div>';
     return;
   }
-  positionList.innerHTML = positions.map(po => `
+  positionList.innerHTML = positions.map(po => {
+    const src = po.source_id ? allSources.find(s => s.source_id === po.source_id) : null;
+    const srcLabel = src ? escapeHtml(src.title.slice(0, 50) + (src.title.length > 50 ? '…' : '')) : (po.source_id ? `src ${po.source_id}` : '');
+    return `
     <div class="rowItem">
       <div class="rowItemMain">
         <strong>${escapeHtml(po.position_label_code || '')}</strong>
@@ -440,11 +448,12 @@ function renderPositions(positions) {
         <span class="rowItemMeta">
           ${escapeHtml(po.date_start || '')}${po.date_end ? '–' + escapeHtml(po.date_end) : ''}
           · scale ${escapeHtml(po.scale_level_code || '')}
-          · src ${po.source_id || ''}
+          ${srcLabel ? ' · ' + srcLabel : ''}
         </span>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 // ---- Relationships (expandable, per-event timeline) ----
@@ -475,6 +484,7 @@ function renderRelationships(rels) {
           <div class="relTimeline hidden" data-timeline-for="${r.relationship_id}"></div>
         </div>
         <div class="rowItemActions">
+          <button type="button" class="smallBtn" data-action="edit-rel" data-rel-id="${r.relationship_id}">✎</button>
           <button type="button" class="smallBtn" data-action="add-char" data-rel-id="${r.relationship_id}">+ Char</button>
           <button type="button" class="smallBtn danger" data-action="delete-rel" data-rel-id="${r.relationship_id}">×</button>
         </div>
@@ -488,6 +498,12 @@ function renderRelationships(rels) {
       if (ev.target.closest('button')) return;
       const relId = Number(item.dataset.relId);
       toggleTimeline(relId, item);
+    });
+  });
+  relationshipList.querySelectorAll('button[data-action="edit-rel"]').forEach(b => {
+    b.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      openRelEditDialog(Number(b.dataset.relId));
     });
   });
   relationshipList.querySelectorAll('button[data-action="add-char"]').forEach(b => {
@@ -716,6 +732,7 @@ async function openCharDialog(relId) {
   }
   charDialogWho.textContent = label;
   charForm.reset();
+  populateSourceSelects(charForm.closest('div') || document);
   charDialog.classList.remove('hidden');
 }
 
@@ -725,6 +742,79 @@ function closeCharDialog() {
 }
 if (charCancel) charCancel.addEventListener('click', closeCharDialog);
 if (charCancelX) charCancelX.addEventListener('click', closeCharDialog);
+
+// ---- Relationship edit dialog ----
+
+const relEditDialog = document.getElementById('relEditDialog');
+const relEditWho = document.getElementById('relEditWho');
+const relEditForm = document.getElementById('relEditForm');
+
+async function openRelEditDialog(relId) {
+  let rel;
+  try { rel = await fetchJSON(`/api/relationships/${relId}`); }
+  catch(e) { setStatus(`Could not load relationship: ${e.message}`, 'err'); return; }
+
+  const low = rel.person_low_name || `id ${rel.person_low_id}`;
+  const high = rel.person_high_name || `id ${rel.person_high_id}`;
+  relEditWho.textContent = `${low} ↔ ${high}`;
+  relEditForm.querySelector('[name="relationship_id"]').value = relId;
+
+  relEditForm.querySelectorAll('select[data-lookup]').forEach(sel => {
+    const key = sel.getAttribute('data-lookup');
+    const items = lookups[key] || [];
+    while (sel.options.length > 1) sel.remove(1);
+    for (const it of items) {
+      const o = document.createElement('option');
+      o.value = it.code;
+      o.textContent = `${it.label} (${it.code})`;
+      sel.appendChild(o);
+    }
+    sel.value = rel[sel.name] || '';
+  });
+
+  await ensureSourcesLoaded();
+  populateSourceSelects(relEditForm.closest('.modalBody') || relEditForm);
+  const srcSel = relEditForm.querySelector('.sourceSelect');
+  if (srcSel) srcSel.value = rel.source_id || '';
+
+  relEditForm.querySelector('[name="start_date"]').value = rel.start_date || '';
+  relEditForm.querySelector('[name="end_date"]').value = rel.end_date || '';
+  relEditForm.querySelector('[name="strength"]').value = rel.strength ?? '';
+  relEditForm.querySelector('[name="notes"]').value = rel.notes || '';
+
+  relEditDialog.classList.remove('hidden');
+}
+
+function closeRelEditDialog() { relEditDialog.classList.add('hidden'); }
+document.getElementById('relEditCancel').addEventListener('click', closeRelEditDialog);
+document.getElementById('relEditCancelX').addEventListener('click', closeRelEditDialog);
+
+relEditForm.addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const fd = new FormData(relEditForm);
+  const relId = Number(fd.get('relationship_id'));
+  const payload = {
+    relationship_type_code: fd.get('relationship_type_code'),
+    start_date: fd.get('start_date') || null,
+    end_date: fd.get('end_date') || null,
+    strength: fd.get('strength') ? Number(fd.get('strength')) : null,
+    alignment_status_code: fd.get('alignment_status_code') || null,
+    source_id: fd.get('source_id') ? Number(fd.get('source_id')) : null,
+    notes: fd.get('notes') || null,
+  };
+  try {
+    await fetchJSON(`/api/relationships/${relId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    closeRelEditDialog();
+    setStatus('Relationship updated.', 'ok');
+    if (selectedPerson) await selectPerson(selectedPerson.person_id);
+  } catch(e) {
+    setStatus(`Update failed: ${e.message}`, 'err');
+  }
+});
 
 if (charForm) {
   charForm.addEventListener('submit', async (ev) => {
@@ -847,7 +937,8 @@ filterConnected.addEventListener('change', renderList);
   try {
     lookups = await fetchJSON('/api/lookups');
     populateLookupSelects();
-    await loadList();
+    await Promise.all([loadList(), ensureSourcesLoaded(), ensurePlacesLoaded()]);
+    populateSourceSelects();
     setStatus(`Ready. ${people.length} people loaded.`, 'ok');
   } catch (e) {
     setStatus(`Init failed: ${e.message}`, 'err');
@@ -873,7 +964,7 @@ async function ensurePlacesLoaded(force=false) {
   try { allPlaces = await fetchJSON('/api/places'); }
   catch (_) { allPlaces = []; }
   // Populate any place selects that have already been rendered.
-  for (const selId of ['membershipPlace', 'orgDialogPlace']) {
+  for (const selId of ['membershipPlace', 'orgDialogPlace', 'residencePlace']) {
     const sel = document.getElementById(selId);
     if (!sel) continue;
     // Preserve current selection and the first "(none)" option.
@@ -889,6 +980,38 @@ async function ensurePlacesLoaded(force=false) {
   }
 }
 
+// ---- Sources ----
+
+let allSources = [];
+let pendingSourceTarget = null; // the <select> element that triggered the source dialog
+
+async function ensureSourcesLoaded(force=false) {
+  if (!force && allSources.length) return;
+  try { allSources = await fetchJSON('/api/sources'); }
+  catch (_) { allSources = []; }
+}
+
+function sourceLabel(s) {
+  const parts = [s.title];
+  if (s.creator) parts.push(s.creator);
+  if (s.date_created) parts.push(s.date_created.slice(0, 4));
+  return `[${s.source_id}] ${parts.join(' — ')}`;
+}
+
+function populateSourceSelects(context=document) {
+  context.querySelectorAll('select.sourceSelect').forEach(sel => {
+    const cur = sel.value;
+    while (sel.options.length > 1) sel.remove(1);
+    for (const s of allSources) {
+      const o = document.createElement('option');
+      o.value = s.source_id;
+      o.textContent = sourceLabel(s);
+      sel.appendChild(o);
+    }
+    if (cur) sel.value = cur;
+  });
+}
+
 function renderMemberships(rows) {
   membershipCountEl.textContent = `(${rows.length})`;
   if (!rows.length) {
@@ -897,6 +1020,8 @@ function renderMemberships(rows) {
   }
   membershipList.innerHTML = rows.map(m => {
     const dates = [m.date_start, m.date_end].filter(Boolean).join('–');
+    const src = m.source_id ? allSources.find(s => s.source_id === m.source_id) : null;
+    const srcLabel = src ? src.title.slice(0, 50) + (src.title.length > 50 ? '…' : '') : '';
     return `
       <div class="rowItem">
         <div class="rowItemMain">
@@ -906,6 +1031,7 @@ function renderMemberships(rows) {
             ${m.role ? ' · ' + escapeHtml(m.role) : ''}
             ${dates ? ' · ' + escapeHtml(dates) : ''}
             ${m.place_name ? ' · 📍 ' + escapeHtml(m.place_name) : ''}
+            ${srcLabel ? ' · 📄 ' + escapeHtml(srcLabel) : ''}
           </span>
           ${m.notes ? `<div class="rowItemMeta">${escapeHtml(m.notes)}</div>` : ''}
         </div>
@@ -915,6 +1041,7 @@ function renderMemberships(rows) {
       </div>
     `;
   }).join('');
+  // ... rest of the function (delete listeners) stays the same
 
   membershipList.querySelectorAll('button[data-action="delete-membership"]').forEach(b => {
     b.addEventListener('click', async () => {
@@ -931,7 +1058,83 @@ function renderMemberships(rows) {
   });
 }
 
-// --- Org autocomplete inside the "+ Add membership" form ---
+// ---- Residences ----
+
+function renderResidences(rows) {
+  residenceCountEl.textContent = `(${rows.length})`;
+  if (!rows.length) {
+    residenceList.innerHTML = '<div class="muted">No residences yet.</div>';
+    return;
+  }
+  residenceList.innerHTML = rows.map(r => {
+    const dates = [r.date_start, r.date_end].filter(Boolean).join('–');
+    return `
+      <div class="rowItem">
+        <div class="rowItemMain">
+          <strong>📍 ${escapeHtml(r.place_name || '(unknown place)')}</strong>
+          <span class="rowItemMeta">
+            ${escapeHtml(r.residence_type_code || '')}
+            ${dates ? ' · ' + escapeHtml(dates) : ''}
+          </span>
+          ${r.notes ? `<div class="rowItemMeta">${escapeHtml(r.notes)}</div>` : ''}
+        </div>
+        <div class="rowItemActions">
+          <button type="button" class="smallBtn danger" data-action="delete-residence" data-id="${r.residence_id}">×</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  residenceList.querySelectorAll('button[data-action="delete-residence"]').forEach(b => {
+    b.addEventListener('click', async () => {
+      const id = Number(b.dataset.id);
+      if (!confirm('Remove this residence record?')) return;
+      try {
+        await fetchJSON(`/api/residences/${id}`, { method: 'DELETE' });
+        setStatus('Residence removed.', 'ok');
+        if (selectedPerson) await selectPerson(selectedPerson.person_id);
+      } catch (e) {
+        setStatus(`Delete failed: ${e.message}`, 'err');
+      }
+    });
+  });
+}
+
+// --- Residences add form ---
+
+const residenceAddForm = document.getElementById('residenceAddForm');
+if (residenceAddForm) {
+  residenceAddForm.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    if (!selectedPerson) return;
+    const fd = new FormData(residenceAddForm);
+    const placeId = fd.get('place_id');
+    if (!placeId) { setStatus('Select a place.', 'err'); return; }
+    const body = {
+      place_id: Number(placeId),
+      residence_type_code: fd.get('residence_type_code') || 'household',
+      date_start: fd.get('date_start') || null,
+      date_end: fd.get('date_end') || null,
+      source_id: fd.get('source_id') ? Number(fd.get('source_id')) : null,
+      notes: fd.get('notes') || null,
+    };
+    try {
+      await fetchJSON(`/api/people/${selectedPerson.person_id}/residences`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      setStatus('Residence added.', 'ok');
+      residenceAddForm.reset();
+      const det = residenceAddForm.closest('details');
+      if (det) det.open = false;
+      await selectPerson(selectedPerson.person_id);
+    } catch (e) {
+      setStatus(`Save failed: ${e.message}`, 'err');
+    }
+  });
+}
+
+// --- "+  New organization…" inline dialog ---
 
 const membershipAddForm = document.getElementById('membershipAddForm');
 const orgSearch = document.getElementById('orgSearch');
@@ -1072,6 +1275,85 @@ if (orgCreateForm) {
       if (det) det.open = true;
     } catch (e) {
       setStatus(`Create failed: ${e.message}`, 'err');
+    }
+  });
+}
+
+// ============================================================================
+// Source creation dialog
+// ============================================================================
+
+const sourceDialog = document.getElementById('sourceDialog');
+const sourceCreateForm = document.getElementById('sourceCreateForm');
+const sourceCancel = document.getElementById('sourceCancel');
+const sourceCancelX = document.getElementById('sourceCancelX');
+
+function openSourceDialog(targetSelect) {
+  pendingSourceTarget = targetSelect || null;
+  // Populate source_type lookup inside the dialog
+  sourceDialog.querySelectorAll('select[data-lookup]').forEach(sel => {
+    const key = sel.getAttribute('data-lookup');
+    const items = lookups[key] || [];
+    while (sel.options.length > 1) sel.remove(1);
+    for (const it of items) {
+      const o = document.createElement('option');
+      o.value = it.code;
+      o.textContent = `${it.label} (${it.code})`;
+      sel.appendChild(o);
+    }
+  });
+  sourceCreateForm.reset();
+  sourceDialog.classList.remove('hidden');
+  setTimeout(() => sourceCreateForm.querySelector('input[name="title"]').focus(), 50);
+}
+
+function closeSourceDialog() { sourceDialog.classList.add('hidden'); }
+if (sourceCancel)  sourceCancel.addEventListener('click', closeSourceDialog);
+if (sourceCancelX) sourceCancelX.addEventListener('click', closeSourceDialog);
+
+// Wire up every "+ New source…" button (both now and when new ones appear)
+document.addEventListener('click', ev => {
+  if (ev.target.classList.contains('sourcePickBtn')) {
+    const form = ev.target.closest('form');
+    const sel = form ? form.querySelector('select.sourceSelect') : null;
+    openSourceDialog(sel);
+  }
+});
+
+if (sourceCreateForm) {
+  sourceCreateForm.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const fd = new FormData(sourceCreateForm);
+    const body = {
+      title: (fd.get('title') || '').toString().trim(),
+      source_type_code: fd.get('source_type_code') || null,
+      creator: fd.get('creator') || null,
+      date_created: fd.get('date_created') || null,
+      archive: fd.get('archive') || null,
+      collection: fd.get('collection') || null,
+      box_folder: fd.get('box_folder') || null,
+      url: fd.get('url') || null,
+      citation_full: fd.get('citation_full') || null,
+      notes: fd.get('notes') || null,
+    };
+    if (!body.title) { setStatus('Title is required.', 'err'); return; }
+    if (!body.source_type_code) { setStatus('Source type is required.', 'err'); return; }
+    try {
+      const created = await fetchJSON('/api/sources', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      setStatus(`Created source "${created.title}" (id ${created.source_id}).`, 'ok');
+      await ensureSourcesLoaded(true);
+      populateSourceSelects();
+      // Auto-select the new source in whichever form triggered the dialog
+      if (pendingSourceTarget) {
+        pendingSourceTarget.value = created.source_id;
+      }
+      closeSourceDialog();
+    } catch (e) {
+      setStatus(`Create source failed: ${e.message}`, 'err');
     }
   });
 }

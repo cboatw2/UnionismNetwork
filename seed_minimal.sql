@@ -119,6 +119,7 @@ INSERT OR IGNORE INTO lkp_place_type (place_type_code, label) VALUES
 ('state', 'State'),
 ('region', 'Region'),
 ('nation', 'Nation'),
+('plantation', 'Plantation'),
 ('other', 'Other');
 
 INSERT OR IGNORE INTO lkp_region_sc (region_sc_code, label) VALUES

@@ -16,14 +16,19 @@
         <a href="/events" class="navLink">Events</a>
         <a href="/places" class="navLink">Places</a>
         <a href="/organizations" class="navLink">Organizations</a>
+        <a href="/sources" class="navLink">Sources</a>
         <a href="/entry" class="navLink">Legacy entry</a>
       </nav>
       <div class="controls">
         <a href="/entry" class="panelBtn" style="text-decoration:none;">+ Add data</a>
         <label>
           Year
-          <input id="year" type="range" min="1817" max="1865" step="1" value="1832" />
-          <input id="yearInput" type="number" min="1817" max="1865" step="1" value="1832" class="yearNumber" />
+          <input id="year" type="range" min="1779" max="1865" step="1" value="1832" />
+          <input id="yearInput" type="number" min="1779" max="1865" step="1" value="1832" class="yearNumber" />
+        </label>
+        <label class="checkboxRow" title="Show every relationship/residence/membership regardless of date">
+          <input id="allYears" type="checkbox" />
+          All years
         </label>
         <label>
           Issue
@@ -55,6 +60,12 @@
           <input id="showLabels" type="checkbox" />
           Show all labels
         </label>
+        <span class="layerGroup" title="Which connection layers to render">
+          <span class="layerGroupLabel">Layers:</span>
+          <label class="checkboxRow"><input id="layerRelationship" type="checkbox" checked /> Relationships</label>
+          <label class="checkboxRow"><input id="layerCoResidence" type="checkbox" /> Co-residence</label>
+          <label class="checkboxRow"><input id="layerSharedMembership" type="checkbox" checked /> Shared membership</label>
+        </span>
       </div>
     </header>
 
@@ -85,6 +96,6 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-    <script src="/static/app.js?v=9"></script>
+    <script src="/static/app.js?v=11"></script>
   </body>
 </html>

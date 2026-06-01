@@ -16,6 +16,7 @@
           <a href="/events" class="sidebarLink">Events</a>
           <a href="/places" class="sidebarLink">Places</a>
           <a href="/organizations" class="sidebarLink">Organizations</a>
+          <a href="/sources" class="sidebarLink">Sources</a>
           <a href="/entry" class="sidebarLink muted" title="Older entry form (deprecated)">Legacy entry</a>
      </nav>
       <div class="sidebarFooter">
@@ -142,7 +143,10 @@
                     <label>Start date<input name="start_date" placeholder="YYYY-MM-DD" /></label>
                     <label>End date<input name="end_date" placeholder="YYYY-MM-DD" /></label>
                     <label>Strength (1–3)<input name="strength" type="number" min="1" max="3" /></label>
-                    <label>Source ID<input name="source_id" type="number" /></label>
+                    <label class="fullWidth">Source
+                      <select name="source_id" class="sourceSelect"><option value="">(none)</option></select>
+                      <button type="button" class="smallBtn sourcePickBtn" style="margin-top:4px;">+ New source…</button>
+                    </label>
                   </div>
                   <label class="fullWidth">Notes
                     <textarea name="notes" rows="2"></textarea>
@@ -172,7 +176,10 @@
                       <button type="button" class="smallBtn" id="newOrgBtn" style="margin-top:4px;">+ New organization…</button>
                     </label>
                     <label>Role<input name="role" placeholder="e.g. president, deacon, founding member" /></label>
-                    <label>Source ID<input name="source_id" type="number" /></label>
+                    <label class="fullWidth">Source
+                      <select name="source_id" class="sourceSelect"><option value="">(none)</option></select>
+                      <button type="button" class="smallBtn sourcePickBtn" style="margin-top:4px;">+ New source…</button>
+                    </label>
                     <label>Date start<input name="date_start" placeholder="YYYY-MM-DD" /></label>
                     <label>Date end<input name="date_end" placeholder="YYYY-MM-DD" /></label>
                     <label class="fullWidth">Location
@@ -187,6 +194,34 @@
                   </label>
                   <div class="formActions">
                     <button type="submit" class="primaryBtn">Add membership</button>
+                  </div>
+                </form>
+              </details>
+            </section>
+
+            <!-- Residences (person_place_residence) -->
+            <section class="editorSection">
+              <h3>Residences <span class="muted" id="residenceCount">(0)</span></h3>
+              <div id="residenceList" class="rowList"></div>
+
+              <details class="addBlock">
+                <summary class="addSummary">+ Add residence</summary>
+                <form id="residenceAddForm" class="entryForm addForm">
+                  <div class="formGrid">
+                    <label>Place *<select id="residencePlace" name="place_id" required><option value="">(select place)</option></select></label>
+                    <label>Type<select name="residence_type_code" data-lookup="residence_type"><option value="">(default: household)</option></select></label>
+                    <label>Date start<input name="date_start" placeholder="YYYY-MM-DD" /></label>
+                    <label>Date end<input name="date_end" placeholder="YYYY-MM-DD" /></label>
+                    <label class="fullWidth">Source
+                      <select name="source_id" class="sourceSelect"><option value="">(none)</option></select>
+                      <button type="button" class="smallBtn sourcePickBtn" style="margin-top:4px;">+ New source…</button>
+                    </label>
+                  </div>
+                  <label class="fullWidth">Notes
+                    <textarea name="notes" rows="2"></textarea>
+                  </label>
+                  <div class="formActions">
+                    <button type="submit" class="primaryBtn">Add residence</button>
                   </div>
                 </form>
               </details>
@@ -240,7 +275,10 @@
               <label>Claim type *<select name="claim_type_code" data-lookup="claim_type" required><option value=""></option></select></label>
               <label>Evidence type *<select name="evidence_type_code" data-lookup="evidence_type" required><option value=""></option></select></label>
               <label>Confidence *<select name="confidence_score" data-lookup="confidence_score" required><option value=""></option></select></label>
-              <label>Source ID *<input name="source_id" type="number" required /></label>
+              <label class="fullWidth">Source *
+                <select name="source_id" class="sourceSelect" required><option value="">— pick source —</option></select>
+                <button type="button" class="smallBtn sourcePickBtn" style="margin-top:4px;">+ New source…</button>
+              </label>
               <label class="checkboxRow">
                 <input type="checkbox" name="counterevidence_present" value="1" />
                 Counterevidence present
@@ -255,6 +293,40 @@
             <div class="modalActions">
               <button type="button" class="panelBtn" id="charCancel">Cancel</button>
               <button type="submit" class="primaryBtn">Add characterization</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit relationship dialog -->
+    <div id="relEditDialog" class="modalOverlay hidden" role="dialog" aria-modal="true">
+      <div class="modalBox" style="width:520px; max-width:95vw;">
+        <div class="modalHeader">
+          <strong>Edit relationship</strong>
+          <button type="button" class="panelBtn" id="relEditCancelX">×</button>
+        </div>
+        <div class="modalBody">
+          <div class="muted" id="relEditWho" style="margin-bottom:8px;">—</div>
+          <form id="relEditForm" class="entryForm">
+            <input type="hidden" name="relationship_id" id="relEditId" />
+            <div class="formGrid">
+              <label>Type *<select name="relationship_type_code" data-lookup="relationship_type" required><option value=""></option></select></label>
+              <label>Alignment<select name="alignment_status_code" data-lookup="alignment_status"><option value=""></option></select></label>
+              <label>Start date<input name="start_date" placeholder="YYYY-MM-DD" /></label>
+              <label>End date<input name="end_date" placeholder="YYYY-MM-DD" /></label>
+              <label>Strength (1–3)<input name="strength" type="number" min="1" max="3" /></label>
+              <label class="fullWidth">Source
+                <select name="source_id" class="sourceSelect"><option value="">(none)</option></select>
+                <button type="button" class="smallBtn sourcePickBtn" style="margin-top:4px;">+ New source…</button>
+              </label>
+            </div>
+            <label class="fullWidth">Notes
+              <textarea name="notes" rows="2"></textarea>
+            </label>
+            <div class="modalActions">
+              <button type="button" class="panelBtn" id="relEditCancel">Cancel</button>
+              <button type="submit" class="primaryBtn">Save changes</button>
             </div>
           </form>
         </div>
@@ -289,6 +361,40 @@
       </div>
     </div>
 
-    <script src="/static/people.js?v=4"></script>
+    <!-- Create-source dialog -->
+    <div id="sourceDialog" class="modalOverlay hidden" role="dialog" aria-modal="true">
+      <div class="modalBox" style="width:540px; max-width:95vw;">
+        <div class="modalHeader">
+          <strong>Create source</strong>
+          <button type="button" class="panelBtn" id="sourceCancelX">×</button>
+        </div>
+        <div class="modalBody">
+          <form id="sourceCreateForm" class="entryForm">
+            <div class="formGrid">
+              <label class="fullWidth">Title *<input name="title" required /></label>
+              <label>Type *<select name="source_type_code" data-lookup="source_type" required><option value=""></option></select></label>
+              <label>Creator<input name="creator" placeholder="Author / editor / compiler" /></label>
+              <label>Date created<input name="date_created" placeholder="YYYY or YYYY-MM-DD" /></label>
+              <label>Archive<input name="archive" placeholder="e.g. SCHS, SCL, LOC" /></label>
+              <label>Collection<input name="collection" /></label>
+              <label>Box / folder<input name="box_folder" /></label>
+              <label>URL<input name="url" type="url" placeholder="https://…" /></label>
+            </div>
+            <label class="fullWidth">Full citation
+              <textarea name="citation_full" rows="2"></textarea>
+            </label>
+            <label class="fullWidth">Notes
+              <textarea name="notes" rows="2"></textarea>
+            </label>
+            <div class="modalActions">
+              <button type="button" class="panelBtn" id="sourceCancel">Cancel</button>
+              <button type="submit" class="primaryBtn">Create source</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/people.js?v=10"></script>
   </body>
 </html>
