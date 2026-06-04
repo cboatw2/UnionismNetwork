@@ -375,9 +375,30 @@ def state(
             })
 
         # 4) Collapse pair_layers into one edge per pair.
+        # When a pair has multiple "relationship" layers (e.g. an NER-derived
+        # `co_mentioned` row plus a curated `political_alliance`), prefer the
+        # most informative one as the primary so the curated alignment is what
+        # the frontend renders. Preference order:
+        #   (a) relationship layer whose type is NOT `co_mentioned` AND has a
+        #       non-null alignment_status_code,
+        #   (b) any relationship layer whose type is NOT `co_mentioned`,
+        #   (c) any relationship layer with a non-null alignment_status_code,
+        #   (d) the first relationship layer (back-compat),
+        #   (e) the first layer of any kind.
         layered_edges: List[Dict[str, Any]] = []
         for (low, high), layers in pair_layers.items():
-            primary = next((l for l in layers if l["kind"] == "relationship"), None) or layers[0]
+            rel_layers = [l for l in layers if l["kind"] == "relationship"]
+            primary = (
+                next((l for l in rel_layers
+                      if l.get("relationship_type_code") != "co_mentioned"
+                      and l.get("alignment_status_code") is not None), None)
+                or next((l for l in rel_layers
+                         if l.get("relationship_type_code") != "co_mentioned"), None)
+                or next((l for l in rel_layers
+                         if l.get("alignment_status_code") is not None), None)
+                or (rel_layers[0] if rel_layers else None)
+                or layers[0]
+            )
             sm = next((l for l in layers if l["kind"] == "shared_membership"), None)
             cr_layer = next((l for l in layers if l["kind"] == "co_residence"), None)
             edge = {
@@ -1382,6 +1403,9 @@ class PositionIn(BaseModel):
     stance_on_secession: Optional[float] = None
     counterevidence_present: int = 0
     interpretive_note: Optional[str] = None
+    # Phase 2 fields — drive the visualization clustering.
+    stance_code: Optional[str] = None
+    position_notes: Optional[str] = None
 
 
 @app.post("/api/positions")
@@ -1395,6 +1419,7 @@ def create_position(body: PositionIn) -> Dict[str, Any]:
         "claim_type_code", "confidence_score", "evidence_type_code",
         "counterevidence_present", "source_id",
         "justification_note", "interpretive_note",
+        "stance_code", "position_notes",
     ]
     values = [_none_if_blank(getattr(body, f)) for f in fields]
     placeholders = ",".join(["?"] * len(fields))

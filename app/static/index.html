@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Unionism Network</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/static/styles.css?v=7" />
+    <link rel="stylesheet" href="/static/styles.css?v=9" />
   </head>
   <body>
     <header class="topbar">
@@ -49,7 +49,7 @@
           Coded people only
         </label>
         <label class="checkboxRow">
-          <input id="filterHideCoMentions" type="checkbox" checked />
+          <input id="filterHideCoMentions" type="checkbox" />
           Hide co-mentions
         </label>
         <label class="checkboxRow">
@@ -68,6 +68,39 @@
         </span>
       </div>
     </header>
+
+    <div class="timelineBar">
+      <div class="timelineControls">
+        <button type="button" id="playBtn" class="playBtn" title="Play/pause timeline">▶</button>
+        <label class="checkboxRow">
+          Speed
+          <select id="playSpeed" class="speedSelect">
+            <option value="800">slow</option>
+            <option value="400" selected>normal</option>
+            <option value="180">fast</option>
+          </select>
+        </label>
+        <label class="checkboxRow">
+          <input id="playLoop" type="checkbox" checked />
+          Loop
+        </label>
+        <label class="checkboxRow" title="Pull supports/opposes apart by issue stance">
+          <input id="filterClusterByStance" type="checkbox" checked />
+          Cluster by stance
+        </label>
+        <span class="yearDisplay" id="yearDisplay">1832</span>
+      </div>
+      <div class="chapterChips" id="chapterChips">
+        <button type="button" class="chapterChip" data-year="1828" data-issue="nullification">1828 · Exposition</button>
+        <button type="button" class="chapterChip" data-year="1830" data-issue="nullification">1830 · Webster–Hayne</button>
+        <button type="button" class="chapterChip" data-year="1832" data-issue="nullification">1832 · Ordinance</button>
+        <button type="button" class="chapterChip" data-year="1833" data-issue="nullification">1833 · Compromise</button>
+        <button type="button" class="chapterChip" data-year="1835" data-issue="slavery">1835 · Slavery hardens</button>
+        <button type="button" class="chapterChip" data-year="1850" data-issue="federal_power">1850 · Compromise</button>
+        <button type="button" class="chapterChip" data-year="1860" data-issue="secession">1860 · Secession</button>
+        <button type="button" class="chapterChip" data-year="1863" data-issue="secession">1863 · Petigru dies</button>
+      </div>
+    </div>
 
     <main class="layout">
       <section class="panel">
@@ -96,6 +129,6 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-    <script src="/static/app.js?v=11"></script>
+    <script src="/static/app.js?v=13"></script>
   </body>
 </html>

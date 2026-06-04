@@ -440,16 +440,24 @@ function renderPositions(positions) {
   positionList.innerHTML = positions.map(po => {
     const src = po.source_id ? allSources.find(s => s.source_id === po.source_id) : null;
     const srcLabel = src ? escapeHtml(src.title.slice(0, 50) + (src.title.length > 50 ? '…' : '')) : (po.source_id ? `src ${po.source_id}` : '');
+    const stancePill = po.stance_code
+      ? `<span class="stancePill stance-${escapeHtml(po.stance_code)}">${escapeHtml(po.stance_code)}</span>`
+      : '';
+    const notes = po.position_notes
+      ? `<div class="rowItemMeta" style="margin-top:4px; white-space:normal;">${escapeHtml(po.position_notes)}</div>`
+      : '';
     return `
     <div class="rowItem">
       <div class="rowItemMain">
         <strong>${escapeHtml(po.position_label_code || '')}</strong>
         on ${escapeHtml(po.issue_category_code || '')}
+        ${stancePill}
         <span class="rowItemMeta">
           ${escapeHtml(po.date_start || '')}${po.date_end ? '–' + escapeHtml(po.date_end) : ''}
           · scale ${escapeHtml(po.scale_level_code || '')}
           ${srcLabel ? ' · ' + srcLabel : ''}
         </span>
+        ${notes}
       </div>
     </div>
   `;
@@ -671,6 +679,61 @@ if (relAddForm) {
       relOtherId.value = '';
       const detailsEl = relAddForm.closest('details');
       if (detailsEl) detailsEl.open = false;
+      await selectPerson(selectedPerson.person_id);
+      await loadList();
+    } catch (e) {
+      setStatus(`Create failed: ${e.message}`, 'err');
+    }
+  });
+}
+
+// ---- + Add position (inline) ----
+const positionAddForm = document.getElementById('positionAddForm');
+if (positionAddForm) {
+  positionAddForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (!selectedPerson) return;
+    const fd = new FormData(positionAddForm);
+    const body = {
+      person_id: selectedPerson.person_id,
+      issue_category_code: fd.get('issue_category_code'),
+      position_label_code: fd.get('position_label_code'),
+      stance_code: fd.get('stance_code') || null,
+      scale_level_code: fd.get('scale_level_code'),
+      region_relevance_code: fd.get('region_relevance_code') || null,
+      date_start: fd.get('date_start') || null,
+      date_end: fd.get('date_end') || null,
+      claim_type_code: fd.get('claim_type_code'),
+      evidence_type_code: fd.get('evidence_type_code'),
+      confidence_score: fd.get('confidence_score') ? Number(fd.get('confidence_score')) : 0,
+      source_id: fd.get('source_id') ? Number(fd.get('source_id')) : 0,
+      counterevidence_present: fd.get('counterevidence_present') ? 1 : 0,
+      justification_note: (fd.get('justification_note') || '').toString().trim(),
+      position_notes: fd.get('position_notes') || null,
+    };
+    const missing = [];
+    if (!body.issue_category_code) missing.push('issue');
+    if (!body.position_label_code) missing.push('position label');
+    if (!body.scale_level_code) missing.push('scale');
+    if (!body.claim_type_code) missing.push('claim type');
+    if (!body.evidence_type_code) missing.push('evidence type');
+    if (!body.confidence_score) missing.push('confidence');
+    if (!body.source_id) missing.push('source');
+    if (!body.justification_note) missing.push('justification');
+    if (missing.length) {
+      setStatus(`Missing: ${missing.join(', ')}.`, 'err');
+      return;
+    }
+    try {
+      const res = await fetchJSON('/api/positions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      setStatus(`Created position ${res.position_id}.`, 'ok');
+      positionAddForm.reset();
+      const det = positionAddForm.closest('details');
+      if (det) det.open = false;
       await selectPerson(selectedPerson.person_id);
       await loadList();
     } catch (e) {

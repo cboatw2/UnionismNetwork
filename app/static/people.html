@@ -117,10 +117,41 @@
             <section class="editorSection">
               <h3>Positions <span class="muted" id="positionCount">(0)</span></h3>
               <div id="positionList" class="rowList"></div>
-              <p class="muted">
-                Use the existing <a href="/entry">legacy entry form</a> to add a position for now.
-                A streamlined "+ Add position" inline form will appear here in the next iteration.
-              </p>
+
+              <details class="addBlock">
+                <summary class="addSummary">+ Add position</summary>
+                <form id="positionAddForm" class="entryForm addForm">
+                  <div class="formGrid">
+                    <label>Issue *<select name="issue_category_code" data-lookup="issue_category" required><option value=""></option></select></label>
+                    <label>Position label *<select name="position_label_code" data-lookup="position_label" required><option value=""></option></select></label>
+                    <label>Stance *<select name="stance_code" data-lookup="stance" required><option value=""></option></select></label>
+                    <label>Scale *<select name="scale_level_code" data-lookup="scale_level" required><option value=""></option></select></label>
+                    <label>Region<select name="region_relevance_code" data-lookup="region_sc"><option value=""></option></select></label>
+                    <label>Date start<input name="date_start" placeholder="YYYY-MM-DD" /></label>
+                    <label>Date end<input name="date_end" placeholder="YYYY-MM-DD" /></label>
+                    <label>Claim type *<select name="claim_type_code" data-lookup="claim_type" required><option value=""></option></select></label>
+                    <label>Evidence type *<select name="evidence_type_code" data-lookup="evidence_type" required><option value=""></option></select></label>
+                    <label>Confidence *<select name="confidence_score" data-lookup="confidence_score" required><option value=""></option></select></label>
+                    <label class="fullWidth">Source *
+                      <select name="source_id" class="sourceSelect" required><option value="">— pick source —</option></select>
+                      <button type="button" class="smallBtn sourcePickBtn" style="margin-top:4px;">+ New source…</button>
+                    </label>
+                    <label class="checkboxRow">
+                      <input type="checkbox" name="counterevidence_present" value="1" />
+                      Counterevidence present
+                    </label>
+                  </div>
+                  <label class="fullWidth">Justification * <span class="muted">(what's the evidence?)</span>
+                    <textarea name="justification_note" rows="2" required></textarea>
+                  </label>
+                  <label class="fullWidth">Position notes <span class="muted">(narrative; supports chapter footnote tags like <code>[ch.fn 12]</code>)</span>
+                    <textarea name="position_notes" rows="2"></textarea>
+                  </label>
+                  <div class="formActions">
+                    <button type="submit" class="primaryBtn">Add position</button>
+                  </div>
+                </form>
+              </details>
             </section>
 
             <!-- Relationships -->
@@ -395,6 +426,6 @@
       </div>
     </div>
 
-    <script src="/static/people.js?v=10"></script>
+    <script src="/static/people.js?v=11"></script>
   </body>
 </html>

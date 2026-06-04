@@ -9,6 +9,20 @@ let state = null;
 let selectedPersonId = null;
 let selectedEdgeId = null;
 
+// Position memory keyed by person_id so nodes flow between renders instead of
+// jumping. Updated each simulation tick; consulted when (re)building graphNodes.
+const nodePositionMemory = new Map();
+
+// Playback state for the timeline scrubber.
+const playback = {
+  timer: null,
+  speedMs: 400,
+  loop: true,
+  playing: false,
+  minYear: 1779,
+  maxYear: 1865,
+};
+
 // --- Map ---
 let map = null;
 let markersByPersonId = new Map();
@@ -69,7 +83,11 @@ let zoomRoot = null; // <g> that zoom/pan transforms apply to
 const filterState = {
   search: '',
   codedOnly: false,
-  hideCoMentions: true,
+  // Default OFF: after the reltype normalization (2026-06-04) every NER-derived
+  // edge carries `co_mentioned`, so hiding them by default wipes out the
+  // Petigru/Perry corpus-mention web. Users can still toggle this on via the
+  // sidebar checkbox to focus on curated relationships only.
+  hideCoMentions: false,
   focusOnSelected: true,
   showAllLabels: false,
   allYears: false,
@@ -78,6 +96,10 @@ const filterState = {
   layerRelationship: true,
   layerCoResidence: false,
   layerSharedMembership: true,
+  // Cluster-by-stance: when ON and an issue is selected, supports/opposes
+  // are pulled to opposite sides of the canvas so coalescence and fracture
+  // around that issue are immediately visible.
+  clusterByStance: true,
 };
 
 // --- Layered-edge helpers ----------------------------------------------------
@@ -224,7 +246,12 @@ function renderNetwork(nodes, edges) {
   const { filteredNodes, filteredEdges } = applyFilters(nodes, edges);
 
   const nodeById = new Map(filteredNodes.map(n => [n.person_id, n]));
-  const graphNodes = filteredNodes.map(n => ({ ...n }));
+  // Seed graphNodes with remembered positions so nodes flow across renders
+  // instead of teleporting when the year/issue changes.
+  const graphNodes = filteredNodes.map(n => {
+    const m = nodePositionMemory.get(n.person_id);
+    return m ? { ...n, x: m.x, y: m.y, vx: m.vx ?? 0, vy: m.vy ?? 0 } : { ...n };
+  });
   const graphEdges = filteredEdges
     .filter(e => nodeById.has(e.source) && nodeById.has(e.target))
     .map(e => {
@@ -253,6 +280,37 @@ function renderNetwork(nodes, edges) {
 
   // Single <g> that holds everything so zoom/pan transforms it as one.
   zoomRoot = svg.append('g').attr('class', 'zoomRoot');
+
+  // --- Stance backdrop (faint zones + axis labels) ---------------------------
+  // Drawn first so it sits below edges/nodes. Only shown when clustering by
+  // stance is active and an issue is selected.
+  const clusteringActive = filterState.clusterByStance && Boolean(issueSelect.value);
+  if (clusteringActive) {
+    const zoneG = zoomRoot.append('g').attr('class', 'stanceZone');
+    // Left = opposes (red-tinted), right = supports (green-tinted), center = qualified
+    zoneG.append('rect')
+      .attr('x', 0).attr('y', 0)
+      .attr('width', width * 0.33).attr('height', height)
+      .attr('fill', '#ff6b6b').attr('fill-opacity', 0.04);
+    zoneG.append('rect')
+      .attr('x', width * 0.67).attr('y', 0)
+      .attr('width', width * 0.33).attr('height', height)
+      .attr('fill', '#46d369').attr('fill-opacity', 0.04);
+    zoneG.append('text')
+      .attr('class', 'stanceLabel')
+      .attr('x', 18).attr('y', 22)
+      .text(`opposes  ·  ${issueSelect.value}`);
+    zoneG.append('text')
+      .attr('class', 'stanceLabel')
+      .attr('x', width - 18).attr('y', 22)
+      .attr('text-anchor', 'end')
+      .text(`supports  ·  ${issueSelect.value}`);
+    zoneG.append('text')
+      .attr('class', 'stanceLabel')
+      .attr('x', width / 2).attr('y', 22)
+      .attr('text-anchor', 'middle')
+      .text('qualified / mixed');
+  }
 
   // Order edges so derived layers (shared_membership / co_residence) render
   // on top of explicit relationships when they are the primary layer.
@@ -401,11 +459,74 @@ function renderNetwork(nodes, edges) {
   }
   applyDimming();
 
+  // --- Stance-clustering target X per node (only when issue is engaged) -----
+  // supports → right, opposes → left, qualified → center, uncoded → drift.
+  function stanceTargetX(d) {
+    if (!clusteringActive) return width / 2;
+    switch (d.stance_code) {
+      case 'supports':  return width * 0.80;
+      case 'opposes':   return width * 0.20;
+      case 'qualified': return width * 0.50;
+      case 'unknown':   return width * 0.50;
+      default:          return width * 0.50; // no row at this year/issue
+    }
+  }
+  function stanceXStrength(d) {
+    if (!clusteringActive) return 0;
+    if (d.stance_code === 'supports' || d.stance_code === 'opposes') return 0.35;
+    if (d.stance_code === 'qualified' || d.stance_code === 'unknown') return 0.15;
+    return 0.02; // very weak pull on uncoded nodes — they drift toward the middle
+  }
+  function stanceYStrength(d) {
+    // Pull coded nodes toward the upper band; uncoded drift to the lower band.
+    if (!clusteringActive) return 0;
+    return d.stance_code ? 0.04 : 0.10;
+  }
+  function stanceTargetY(d) {
+    if (!clusteringActive) return height / 2;
+    return d.stance_code ? height * 0.42 : height * 0.72;
+  }
+
+  // --- Alignment-aware link distance + strength ------------------------------
+  // Edges with strong alignment pull endpoints close; adversarial/fractured
+  // edges keep endpoints far apart so the visual reads coalesce vs. fracture.
+  function linkAlignment(d) {
+    const layer = d._primaryLayer;
+    if (!layer || layer.kind !== 'relationship') return null;
+    return layer.alignment_status_code || null;
+  }
+  function linkDistance(d) {
+    switch (linkAlignment(d)) {
+      case 'aligned':            return 55;
+      case 'partially_aligned':  return 75;
+      case 'strained':           return 130;
+      case 'fractured':          return 200;
+      case 'adversarial':        return 240;
+      default:                   return 110;
+    }
+  }
+  function linkStrength(d) {
+    switch (linkAlignment(d)) {
+      case 'aligned':            return 0.9;
+      case 'partially_aligned':  return 0.6;
+      case 'strained':           return 0.25;
+      case 'fractured':          return 0.10;
+      case 'adversarial':        return 0.05;
+      default:                   return 0.30;
+    }
+  }
+
   sim = d3.forceSimulation(graphNodes)
-    .force('link', d3.forceLink(graphEdges).id(d => d.person_id).distance(90))
-    .force('charge', d3.forceManyBody().strength(-240))
+    .force('link', d3.forceLink(graphEdges).id(d => d.person_id)
+      .distance(linkDistance)
+      .strength(linkStrength))
+    .force('charge', d3.forceManyBody().strength(-260))
     .force('center', d3.forceCenter(width / 2, height / 2))
     .force('collide', d3.forceCollide(14))
+    .force('clusterX', d3.forceX(stanceTargetX).strength(stanceXStrength))
+    .force('clusterY', d3.forceY(stanceTargetY).strength(stanceYStrength))
+    .alpha(0.7)
+    .alphaDecay(0.04)
     .on('tick', () => {
       link
         .attr('x1', d => d.source.x)
@@ -428,6 +549,11 @@ function renderNetwork(nodes, edges) {
       labels
         .attr('x', d => d.x)
         .attr('y', d => d.y);
+
+      // Persist positions for the next render so nodes flow rather than jump.
+      for (const d of graphNodes) {
+        nodePositionMemory.set(d.person_id, { x: d.x, y: d.y, vx: d.vx, vy: d.vy });
+      }
     });
 
   // Background click clears selection
@@ -661,6 +787,56 @@ async function loadState() {
   state = await res.json();
 }
 
+// --- Playback helpers --------------------------------------------------------
+function startPlayback() {
+  if (playback.playing) return;
+  if (filterState.allYears) {
+    // Disable all-years for playback.
+    const cb = document.getElementById('allYears');
+    if (cb) {
+      cb.checked = false;
+      cb.dispatchEvent(new Event('change'));
+    }
+  }
+  playback.playing = true;
+  const btn = document.getElementById('playBtn');
+  if (btn) {
+    btn.textContent = '❚❚';
+    btn.classList.add('playing');
+  }
+  playback.timer = setInterval(async () => {
+    let y = parseInt(yearInput.value, 10) || playback.minYear;
+    y += 1;
+    if (y > playback.maxYear) {
+      if (playback.loop) {
+        y = playback.minYear;
+      } else {
+        stopPlayback();
+        return;
+      }
+    }
+    yearInput.value = String(y);
+    yearLabel.value = String(y);
+    const yd = document.getElementById('yearDisplay');
+    if (yd) yd.textContent = String(y);
+    await loadState();
+    render();
+  }, playback.speedMs);
+}
+
+function stopPlayback() {
+  if (playback.timer) {
+    clearInterval(playback.timer);
+    playback.timer = null;
+  }
+  playback.playing = false;
+  const btn = document.getElementById('playBtn');
+  if (btn) {
+    btn.textContent = '▶';
+    btn.classList.remove('playing');
+  }
+}
+
 function render() {
   if (!state) return;
   // Keep the year inputs in sync with the response unless we're in all-years mode,
@@ -669,16 +845,33 @@ function render() {
     yearInput.value = String(state.year);
     yearLabel.value = String(state.year);
   }
+  const yearDisplay = document.getElementById('yearDisplay');
+  if (yearDisplay) {
+    yearDisplay.textContent = filterState.allYears ? 'all years' : String(state.year);
+  }
+  syncActiveChapterChip();
 
   renderMap(state.nodes);
   renderNetwork(state.nodes, state.edges);
   renderDetails();
 }
 
+function syncActiveChapterChip() {
+  const yr = filterState.allYears ? null : parseInt(yearInput.value, 10);
+  const issue = issueSelect.value;
+  document.querySelectorAll('.chapterChip').forEach(chip => {
+    const cy = parseInt(chip.dataset.year, 10);
+    const ci = chip.dataset.issue;
+    chip.classList.toggle('active', cy === yr && ci === issue);
+  });
+}
+
 function wireControls() {
   // Slider drives the number input live; commit triggers refresh.
   yearInput.addEventListener('input', () => {
     yearLabel.value = yearInput.value;
+    const yd = document.getElementById('yearDisplay');
+    if (yd) yd.textContent = yearInput.value;
   });
   // Number input drives the slider live; commit (Enter/blur) triggers refresh.
   yearLabel.addEventListener('input', () => {
@@ -691,9 +884,22 @@ function wireControls() {
     render();
   };
 
+  // Live (debounced) refresh while the user drags the slider so the network
+  // visibly reorganizes during the scrub.
+  let scrubTimer = null;
+  yearInput.addEventListener('input', () => {
+    clearTimeout(scrubTimer);
+    scrubTimer = setTimeout(refresh, 120);
+  });
+
   yearInput.addEventListener('change', refresh);
   yearLabel.addEventListener('change', refresh);
-  issueSelect.addEventListener('change', refresh);
+  issueSelect.addEventListener('change', () => {
+    // Issue change resets position memory: a new issue means a new clustering
+    // basis, so a fresh layout reads cleaner than partially-remembered drift.
+    nodePositionMemory.clear();
+    refresh();
+  });
   scaleSelect.addEventListener('change', refresh);
 
   window.addEventListener('resize', () => {
@@ -787,6 +993,77 @@ function wireControls() {
     });
   }
 
+  // Cluster-by-stance toggle: when ON, supports/opposes are pulled to opposite
+  // sides of the canvas for the currently selected issue.
+  const clusterCb = document.getElementById('filterClusterByStance');
+  if (clusterCb) {
+    filterState.clusterByStance = clusterCb.checked;
+    clusterCb.addEventListener('change', () => {
+      filterState.clusterByStance = clusterCb.checked;
+      // Clear position memory when toggling so the new layout reads clean.
+      nodePositionMemory.clear();
+      render();
+    });
+  }
+
+  // --- Timeline playback ---
+  const playBtn = document.getElementById('playBtn');
+  const speedSelect = document.getElementById('playSpeed');
+  const loopCb = document.getElementById('playLoop');
+
+  if (speedSelect) {
+    playback.speedMs = parseInt(speedSelect.value, 10) || 400;
+    speedSelect.addEventListener('change', () => {
+      playback.speedMs = parseInt(speedSelect.value, 10) || 400;
+      if (playback.playing) {
+        stopPlayback();
+        startPlayback();
+      }
+    });
+  }
+  if (loopCb) {
+    playback.loop = loopCb.checked;
+    loopCb.addEventListener('change', () => { playback.loop = loopCb.checked; });
+  }
+
+  // Sync min/max from the slider element so they match the HTML config.
+  if (yearInput) {
+    playback.minYear = parseInt(yearInput.min, 10) || playback.minYear;
+    playback.maxYear = parseInt(yearInput.max, 10) || playback.maxYear;
+  }
+
+  if (playBtn) {
+    playBtn.addEventListener('click', () => {
+      if (playback.playing) stopPlayback();
+      else startPlayback();
+    });
+  }
+
+  // --- Chapter chips: jump to (year, issue) ---
+  document.querySelectorAll('.chapterChip').forEach(chip => {
+    chip.addEventListener('click', async () => {
+      const y = parseInt(chip.dataset.year, 10);
+      const issue = chip.dataset.issue;
+      if (issue && issueSelect.value !== issue) {
+        issueSelect.value = issue;
+        nodePositionMemory.clear();
+      }
+      if (filterState.allYears) {
+        const allYearsCb = document.getElementById('allYears');
+        if (allYearsCb) {
+          allYearsCb.checked = false;
+          allYearsCb.dispatchEvent(new Event('change'));
+        }
+      }
+      yearInput.value = String(y);
+      yearLabel.value = String(y);
+      const yd = document.getElementById('yearDisplay');
+      if (yd) yd.textContent = String(y);
+      await loadState();
+      render();
+    });
+  });
+
   const expandBtn = document.getElementById('networkExpand');
   const networkPanel = document.getElementById('networkPanel');
   if (expandBtn && networkPanel) {
@@ -794,6 +1071,17 @@ function wireControls() {
       const expanded = networkPanel.classList.toggle('expanded');
       expandBtn.textContent = expanded ? 'Collapse' : 'Expand';
       expandBtn.classList.toggle('active', expanded);
+      if (expanded) {
+        // Clear the topbar + timelineBar so playback controls stay accessible.
+        const topH = (document.querySelector('.topbar')?.offsetHeight || 0)
+                   + (document.querySelector('.timelineBar')?.offsetHeight || 0)
+                   + 12; // small gap
+        networkPanel.style.top = `${topH}px`;
+      } else {
+        networkPanel.style.top = '';
+      }
+      // Reset position memory so the simulation lays out cleanly at the new size.
+      nodePositionMemory.clear();
       // Re-render at the new size so the simulation uses the larger viewport.
       render();
       // After layout settles, fit to the new viewport.
