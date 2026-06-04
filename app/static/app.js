@@ -163,6 +163,17 @@ function alignmentColor(code) {
   }
 }
 
+function stanceColor(code) {
+  // Categorical stance palette (Phase 2 schema).
+  switch (code) {
+    case 'supports':  return '#46d369'; // green
+    case 'opposes':   return '#ff6b6b'; // red
+    case 'qualified': return '#f2c14e'; // amber
+    case 'unknown':   return '#9aa0aa'; // mid gray
+    default:          return '#e8e8ea'; // no row at this year/issue
+  }
+}
+
 function normSearch(s) {
   return String(s ?? '').trim().toLowerCase();
 }
@@ -177,9 +188,9 @@ function nodeMatchesSearch(n, q) {
 }
 
 function isPersonCoded(n) {
-  // "Coded" = has at least a position label for the current issue. The /api/state
-  // endpoint surfaces position_label_code per node.
-  return Boolean(n.position_label_code);
+  // "Coded" = has a stance row for the current issue at the current year.
+  // Falls back to position_label_code for any rows still on the legacy schema.
+  return Boolean(n.stance_code || n.position_label_code);
 }
 
 function isCoMentionEdge(e) {
@@ -309,11 +320,10 @@ function renderNetwork(nodes, edges) {
     .attr('r', d => (d.person_id === selectedPersonId ? 9 : (searchHits.has(d.person_id) ? 8 : 6)))
     .attr('fill', d => {
       if (searchHits.has(d.person_id)) return '#ffd24a';
-      if (d.person_id === selectedPersonId) return '#4f7cff';
-      return isPersonCoded(d) ? '#cfd6ff' : '#e8e8ea';
+      return stanceColor(d.stance_code);
     })
-    .attr('stroke', '#2a2f3a')
-    .attr('stroke-width', 1)
+    .attr('stroke', d => d.person_id === selectedPersonId ? '#4f7cff' : '#2a2f3a')
+    .attr('stroke-width', d => d.person_id === selectedPersonId ? 3 : 1)
     .call(d3.drag()
       .on('start', (event) => {
         if (!event.active) sim.alphaTarget(0.3).restart();
@@ -525,17 +535,15 @@ function renderDetails() {
         <div class="k">Label</div><div>${p.position_label_code ? escapeHtml(p.position_label_code) : '<span class="muted">(no coded position)</span>'}</div>
       </div>
       <div class="kv">
-        <div class="k">Union</div><div>${p.stance_on_union ?? '<span class="muted">—</span>'}</div>
-        <div class="k">States’ rights</div><div>${p.stance_on_states_rights ?? '<span class="muted">—</span>'}</div>
-        <div class="k">Slavery</div><div>${p.stance_on_slavery ?? '<span class="muted">—</span>'}</div>
-        <div class="k">Secession</div><div>${p.stance_on_secession ?? '<span class="muted">—</span>'}</div>
+        <div class="k">Stance</div>
+        <div>${p.stance_code ? `<span class="stancePill stance-${escapeHtml(p.stance_code)}">${escapeHtml(p.stance_code)}</span>` : '<span class="muted">(no row at this year)</span>'}</div>
       </div>
       <hr/>
-      <div class="muted">Evidence</div>
-      <div style="margin-top:6px">${p.stance_justification ? escapeHtml(p.stance_justification) : '<span class="muted">(none)</span>'}</div>
+      <div class="muted">Notes / evidence</div>
+      <div style="margin-top:6px">${p.position_notes ? escapeHtml(p.position_notes) : '<span class="muted">(none)</span>'}</div>
       ${src ? `
         <hr/>
-        <div class="muted">Citation</div>
+        <div class="muted">Primary source</div>
         <div style="margin-top:6px">${escapeHtml(src.citation_full || src.title || '')}</div>
         ${src.url ? `<div style="margin-top:6px"><a href="${escapeHtml(src.url)}" target="_blank" rel="noopener">Source link</a></div>` : ''}
       ` : ''}

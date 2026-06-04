@@ -230,6 +230,21 @@ select {
 
 .muted { color: var(--muted); }
 
+/* Stance pills (Phase 2 categorical stance display). */
+.stancePill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1d24;
+  background: #cfd6ff;
+}
+.stancePill.stance-supports  { background: #46d369; }
+.stancePill.stance-opposes   { background: #ff6b6b; color: #fff; }
+.stancePill.stance-qualified { background: #f2c14e; }
+.stancePill.stance-unknown   { background: #9aa0aa; color: #fff; }
+
 .kv {
   display: grid;
   grid-template-columns: 110px 1fr;

@@ -43,6 +43,15 @@ CREATE TABLE IF NOT EXISTS lkp_position_label (
 	label TEXT NOT NULL UNIQUE
 );
 
+-- Stance vocabulary (Phase 1 of stance redesign, 2026-06-03).
+-- Replaces the four stance_on_* scalar columns on positions and the analogous
+-- columns on relationship_characterizations. A position now codes a single
+-- categorical stance against the row's issue_category, defended in `notes`.
+CREATE TABLE IF NOT EXISTS lkp_stance (
+	stance_code TEXT PRIMARY KEY,
+	label TEXT NOT NULL UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS lkp_scale_level (
 	scale_level_code TEXT PRIMARY KEY,
 	label TEXT NOT NULL UNIQUE
@@ -243,6 +252,12 @@ CREATE TABLE IF NOT EXISTS relationship_characterizations (
 	source_id INTEGER NOT NULL REFERENCES sources(source_id),
 	justification_note TEXT NOT NULL,
 	notes TEXT,
+	-- Phase 1 stance redesign (2026-06-03): new columns added alongside legacy.
+	-- `stance_code` will replace alignment_status_code's evidentiary load on
+	-- characterizations; for now both coexist. `relchar_notes` is the merge
+	-- target for justification_note and existing notes once Phase 3 drops them.
+	stance_code TEXT REFERENCES lkp_stance(stance_code),
+	relchar_notes TEXT,
 	CHECK (date_end IS NULL OR date_start IS NULL OR date_end >= date_start),
 	UNIQUE (relationship_id, issue_category_code, date_start, source_id)
 );
@@ -269,7 +284,34 @@ CREATE TABLE IF NOT EXISTS positions (
 	source_id INTEGER NOT NULL REFERENCES sources(source_id),
 	justification_note TEXT NOT NULL,
 	interpretive_note TEXT,
+	-- Phase 1 stance redesign (2026-06-03): replaces the four stance_on_*
+	-- floats and ideology_score with a single categorical stance against the
+	-- row's issue_category. Nullable for now; Phase 3 will make NOT NULL and
+	-- drop the legacy columns. `position_notes` is the merge target for
+	-- justification_note + interpretive_note once Phase 3 drops them.
+	stance_code TEXT REFERENCES lkp_stance(stance_code),
+	position_notes TEXT,
 	CHECK (date_end IS NULL OR date_start IS NULL OR date_end >= date_start)
+);
+
+-- Many-to-many source attribution for positions and relationship_characterizations.
+-- Replaces the single source_id FK once Phase 3 drops it. `source_role` keeps
+-- the primary/secondary distinction without growing a lookup table.
+CREATE TABLE IF NOT EXISTS position_sources (
+	position_id INTEGER NOT NULL REFERENCES positions(position_id) ON DELETE CASCADE,
+	source_id INTEGER NOT NULL REFERENCES sources(source_id),
+	source_role TEXT NOT NULL CHECK (source_role IN ('primary', 'secondary')),
+	notes TEXT,
+	PRIMARY KEY (position_id, source_id)
+);
+
+CREATE TABLE IF NOT EXISTS relchar_sources (
+	relationship_characterization_id INTEGER NOT NULL
+		REFERENCES relationship_characterizations(relationship_characterization_id) ON DELETE CASCADE,
+	source_id INTEGER NOT NULL REFERENCES sources(source_id),
+	source_role TEXT NOT NULL CHECK (source_role IN ('primary', 'secondary')),
+	notes TEXT,
+	PRIMARY KEY (relationship_characterization_id, source_id)
 );
 
 CREATE TABLE IF NOT EXISTS correspondence (
@@ -331,6 +373,19 @@ CREATE INDEX IF NOT EXISTS idx_residence_place ON person_place_residence(place_i
 CREATE INDEX IF NOT EXISTS idx_correspondence_date ON correspondence(date_sent);
 CREATE INDEX IF NOT EXISTS idx_correspondence_sender ON correspondence(sender_id);
 CREATE INDEX IF NOT EXISTS idx_correspondence_recipient ON correspondence(recipient_id);
+
+-- Phase 1 stance redesign indexes (2026-06-03).
+CREATE INDEX IF NOT EXISTS idx_positions_stance ON positions(stance_code);
+CREATE INDEX IF NOT EXISTS idx_relchar_stance ON relationship_characterizations(stance_code);
+CREATE INDEX IF NOT EXISTS idx_position_sources_source ON position_sources(source_id);
+CREATE INDEX IF NOT EXISTS idx_relchar_sources_source ON relchar_sources(source_id);
+
+-- Seed lkp_stance vocabulary (idempotent).
+INSERT OR IGNORE INTO lkp_stance (stance_code, label) VALUES
+	('supports', 'Supports'),
+	('opposes', 'Opposes'),
+	('qualified', 'Qualified / partial commitment'),
+	('unknown', 'Unknown / insufficient evidence');
 
 CREATE TRIGGER IF NOT EXISTS trg_people_updated_at
 AFTER UPDATE ON people

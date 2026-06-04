@@ -101,6 +101,42 @@ def merge(con: sqlite3.Connection, survivor: int, losers: list[int], note: str |
         (*losers, *losers),
     )
 
+    # 3b. Dedupe survivor's relationships.
+    # The UNIQUE constraint on relationships is (person_low_id, person_high_id,
+    # relationship_type_code, start_date). SQLite treats NULL as DISTINCT in UNIQUE
+    # constraints, so `UPDATE OR IGNORE` above cannot detect collisions when
+    # start_date IS NULL -- which is true for nearly all auto-generated co-mention
+    # rows. The result is duplicate rows after merges. Collapse them here, keeping
+    # the lowest relationship_id per logical-key group. We treat NULLs as equal in
+    # both start_date and source_id so identical evidence rows are collapsed but
+    # rows that genuinely differ in source are preserved.
+    cur.execute(
+        """
+        DELETE FROM relationships
+         WHERE relationship_id IN (
+            SELECT r.relationship_id
+              FROM relationships r
+              JOIN (
+                SELECT person_low_id, person_high_id, relationship_type_code,
+                       COALESCE(start_date, '__NULL__')  AS sd_key,
+                       COALESCE(source_id,  -1)          AS src_key,
+                       MIN(relationship_id)              AS keep_id
+                  FROM relationships
+                 WHERE person_low_id = ? OR person_high_id = ?
+                 GROUP BY person_low_id, person_high_id, relationship_type_code, sd_key, src_key
+                HAVING COUNT(*) > 1
+              ) g
+                ON g.person_low_id           = r.person_low_id
+               AND g.person_high_id          = r.person_high_id
+               AND g.relationship_type_code  = r.relationship_type_code
+               AND g.sd_key                  = COALESCE(r.start_date, '__NULL__')
+               AND g.src_key                 = COALESCE(r.source_id, -1)
+               AND r.relationship_id        != g.keep_id
+         )
+        """,
+        (survivor, survivor),
+    )
+
     # 4. Single-FK tables.
     for tbl in (
         "positions",

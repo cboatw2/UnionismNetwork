@@ -132,69 +132,37 @@ def state(
                 ORDER BY """ + _year_from_date_expr("pos.date_start") + """ DESC
                 LIMIT 1
             ) AS position_label_code,
+            -- New schema (Phase 2): authoritative stance categorical + freeform notes.
             (
-                SELECT pos.stance_on_union
+                SELECT pos.stance_code
                 FROM positions pos
                 WHERE pos.person_id = p.person_id
                   AND pos.issue_category_code = :issue
                   AND """ + _interval_active_at_year("pos.date_start", "pos.date_end") + """
                 ORDER BY """ + _year_from_date_expr("pos.date_start") + """ DESC
                 LIMIT 1
-            ) AS stance_on_union,
+            ) AS stance_code,
             (
-                SELECT pos.stance_on_states_rights
+                SELECT pos.position_notes
                 FROM positions pos
                 WHERE pos.person_id = p.person_id
                   AND pos.issue_category_code = :issue
                   AND """ + _interval_active_at_year("pos.date_start", "pos.date_end") + """
                 ORDER BY """ + _year_from_date_expr("pos.date_start") + """ DESC
                 LIMIT 1
-            ) AS stance_on_states_rights,
+            ) AS position_notes,
+            -- Primary source from position_sources junction for the active position row.
             (
-                SELECT pos.stance_on_slavery
+                SELECT ps.source_id
                 FROM positions pos
+                JOIN position_sources ps ON ps.position_id = pos.position_id
                 WHERE pos.person_id = p.person_id
                   AND pos.issue_category_code = :issue
                   AND """ + _interval_active_at_year("pos.date_start", "pos.date_end") + """
-                ORDER BY """ + _year_from_date_expr("pos.date_start") + """ DESC
-                LIMIT 1
-            ) AS stance_on_slavery,
-            (
-                SELECT pos.stance_on_secession
-                FROM positions pos
-                WHERE pos.person_id = p.person_id
-                  AND pos.issue_category_code = :issue
-                  AND """ + _interval_active_at_year("pos.date_start", "pos.date_end") + """
-                ORDER BY """ + _year_from_date_expr("pos.date_start") + """ DESC
-                LIMIT 1
-            ) AS stance_on_secession,
-            (
-                SELECT pos.confidence_score
-                FROM positions pos
-                WHERE pos.person_id = p.person_id
-                  AND pos.issue_category_code = :issue
-                  AND """ + _interval_active_at_year("pos.date_start", "pos.date_end") + """
-                ORDER BY """ + _year_from_date_expr("pos.date_start") + """ DESC
-                LIMIT 1
-            ) AS stance_confidence,
-            (
-                SELECT pos.source_id
-                FROM positions pos
-                WHERE pos.person_id = p.person_id
-                  AND pos.issue_category_code = :issue
-                  AND """ + _interval_active_at_year("pos.date_start", "pos.date_end") + """
-                ORDER BY """ + _year_from_date_expr("pos.date_start") + """ DESC
+                  AND ps.source_role = 'primary'
+                ORDER BY """ + _year_from_date_expr("pos.date_start") + """ DESC, ps.source_id
                 LIMIT 1
             ) AS stance_source_id,
-            (
-                SELECT pos.justification_note
-                FROM positions pos
-                WHERE pos.person_id = p.person_id
-                  AND pos.issue_category_code = :issue
-                  AND """ + _interval_active_at_year("pos.date_start", "pos.date_end") + """
-                ORDER BY """ + _year_from_date_expr("pos.date_start") + """ DESC
-                LIMIT 1
-            ) AS stance_justification,
             -- Map position (place) for this year: prefer a residence active at this year; else birthplace.
                         COALESCE(
                                 (
@@ -512,6 +480,7 @@ def lookups() -> Dict[str, Any]:
         ("issue_category", "lkp_issue_category", "issue_category_code"),
         ("position_label", "lkp_position_label", "position_label_code"),
         ("scale_level", "lkp_scale_level", "scale_level_code"),
+        ("stance", "lkp_stance", "stance_code"),
         ("confidence_score", "lkp_confidence_score", "confidence_score"),
         ("evidence_type", "lkp_evidence_type", "evidence_type_code"),
         ("claim_type", "lkp_claim_type", "claim_type_code"),
@@ -579,13 +548,15 @@ def get_person(person_id: int) -> Dict[str, Any]:
         row["positions"] = db.fetch_all(
             conn,
             """
-            SELECT position_id, issue_category_code, position_label_code,
-                   date_start, date_end, scale_level_code,
-                   stance_on_union, stance_on_states_rights, stance_on_slavery, stance_on_secession,
-                   confidence_score, source_id, justification_note
-            FROM positions
-            WHERE person_id = ?
-            ORDER BY date_start, position_id
+            SELECT pos.position_id, pos.issue_category_code, pos.position_label_code,
+                   pos.date_start, pos.date_end, pos.scale_level_code,
+                   pos.stance_code, pos.position_notes,
+                   (SELECT GROUP_CONCAT(ps.source_id || ':' || ps.source_role, '|')
+                      FROM position_sources ps
+                     WHERE ps.position_id = pos.position_id) AS sources_packed
+            FROM positions pos
+            WHERE pos.person_id = ?
+            ORDER BY pos.date_start, pos.position_id
             """,
             (person_id,),
         )
