@@ -572,10 +572,12 @@ def get_person(person_id: int) -> Dict[str, Any]:
             SELECT pos.position_id, pos.issue_category_code, pos.position_label_code,
                    pos.date_start, pos.date_end, pos.scale_level_code,
                    pos.stance_code, pos.position_notes,
+                   pos.event_id, e.event_name AS event_name,
                    (SELECT GROUP_CONCAT(ps.source_id || ':' || ps.source_role, '|')
                       FROM position_sources ps
                      WHERE ps.position_id = pos.position_id) AS sources_packed
             FROM positions pos
+            LEFT JOIN events e ON e.event_id = pos.event_id
             WHERE pos.person_id = ?
             ORDER BY pos.date_start, pos.position_id
             """,
@@ -1434,6 +1436,94 @@ def create_position(body: PositionIn) -> Dict[str, Any]:
             raise HTTPException(status_code=400, detail=f"Insert failed: {exc}")
 
 
+@app.get("/api/positions/{position_id}")
+def get_position(position_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(
+            conn,
+            """
+            SELECT pos.*, e.event_name AS event_name
+              FROM positions pos
+              LEFT JOIN events e ON e.event_id = pos.event_id
+             WHERE pos.position_id = ?
+            """,
+            (position_id,),
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Position not found")
+        return row
+
+
+class PositionUpdate(BaseModel):
+    # Mirrors PositionIn minus person_id (positions don't move between people).
+    # Legacy NOT NULL columns (claim_type_code, confidence_score, evidence_type_code,
+    # source_id, justification_note) remain required during the Phase 1 dual-write
+    # window — the edit dialog must round-trip them so values aren't lost.
+    issue_category_code: str
+    position_label_code: str
+    scale_level_code: str
+    claim_type_code: str
+    confidence_score: int
+    evidence_type_code: str
+    source_id: int
+    justification_note: str = Field(..., min_length=1)
+    event_id: Optional[int] = None
+    date_start: Optional[str] = None
+    date_end: Optional[str] = None
+    region_relevance_code: Optional[str] = None
+    counterevidence_present: int = 0
+    interpretive_note: Optional[str] = None
+    # Phase 2 fields — drive the visualization clustering.
+    stance_code: Optional[str] = None
+    position_notes: Optional[str] = None
+
+
+@app.patch("/api/positions/{position_id}")
+def update_position(position_id: int, body: PositionUpdate) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        existing = db.fetch_one(
+            conn, "SELECT position_id FROM positions WHERE position_id = ?", (position_id,)
+        )
+        if not existing:
+            raise HTTPException(status_code=404, detail="Position not found")
+        fields = [
+            "issue_category_code", "position_label_code", "scale_level_code",
+            "region_relevance_code",
+            "claim_type_code", "confidence_score", "evidence_type_code",
+            "counterevidence_present", "source_id",
+            "justification_note", "interpretive_note",
+            "stance_code", "position_notes",
+            "event_id", "date_start", "date_end",
+        ]
+        values = [_none_if_blank(getattr(body, f)) for f in fields]
+        set_clause = ", ".join(f"{f} = ?" for f in fields)
+        try:
+            conn.execute(
+                f"UPDATE positions SET {set_clause} WHERE position_id = ?",
+                values + [position_id],
+            )
+            conn.commit()
+            return db.fetch_one(
+                conn, "SELECT * FROM positions WHERE position_id = ?", (position_id,)
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Update failed: {exc}")
+
+
+@app.delete("/api/positions/{position_id}")
+def delete_position(position_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        existing = db.fetch_one(
+            conn, "SELECT position_id FROM positions WHERE position_id = ?", (position_id,)
+        )
+        if not existing:
+            raise HTTPException(status_code=404, detail="Position not found")
+        # ON DELETE CASCADE on position_sources removes junction rows automatically.
+        conn.execute("DELETE FROM positions WHERE position_id = ?", (position_id,))
+        conn.commit()
+        return {"deleted_position_id": position_id}
+
+
 class AliasIn(BaseModel):
     person_id: int
     alias_name: str = Field(..., min_length=1)
@@ -2017,6 +2107,86 @@ def delete_membership(person_org_id: int) -> Dict[str, Any]:
         return {"deleted_person_org_id": person_org_id}
 
 
+@app.get("/api/memberships/{person_org_id}")
+def get_membership(person_org_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(
+            conn,
+            """
+            SELECT po.person_org_id, po.person_id, po.organization_id, po.role,
+                   po.date_start, po.date_end, po.source_id, po.notes,
+                   o.name AS organization_name, o.org_type_code, o.place_id,
+                   pl.place_name AS place_name,
+                   COALESCE(p.display_name, p.full_name) AS person_name
+              FROM person_organization po
+              JOIN organizations o ON o.organization_id = po.organization_id
+              JOIN people p ON p.person_id = po.person_id
+              LEFT JOIN places pl ON pl.place_id = o.place_id
+             WHERE po.person_org_id = ?
+            """,
+            (person_org_id,),
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Membership not found")
+        return row
+
+
+class MembershipUpdate(BaseModel):
+    # Allow re-targeting the organization (e.g., when fixing a wrong pick) plus
+    # the descriptive metadata. Geography is intentionally excluded — residences
+    # are managed in their own section/endpoints.
+    organization_id: int
+    role: Optional[str] = None
+    date_start: Optional[str] = None
+    date_end: Optional[str] = None
+    source_id: Optional[int] = None
+    notes: Optional[str] = None
+
+
+@app.patch("/api/memberships/{person_org_id}")
+def update_membership(person_org_id: int, body: MembershipUpdate) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        existing = db.fetch_one(
+            conn,
+            "SELECT person_org_id FROM person_organization WHERE person_org_id = ?",
+            (person_org_id,),
+        )
+        if not existing:
+            raise HTTPException(status_code=404, detail="Membership not found")
+        org = db.fetch_one(
+            conn,
+            "SELECT organization_id FROM organizations WHERE organization_id = ?",
+            (body.organization_id,),
+        )
+        if not org:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        try:
+            conn.execute(
+                """
+                UPDATE person_organization SET
+                  organization_id = ?,
+                  role = ?,
+                  date_start = ?, date_end = ?,
+                  source_id = ?,
+                  notes = ?
+                WHERE person_org_id = ?
+                """,
+                (
+                    body.organization_id,
+                    _none_if_blank(body.role),
+                    _none_if_blank(body.date_start),
+                    _none_if_blank(body.date_end),
+                    body.source_id,
+                    _none_if_blank(body.notes),
+                    person_org_id,
+                ),
+            )
+            conn.commit()
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Update failed: {exc}")
+    return get_membership(person_org_id)
+
+
 class ResidenceIn(BaseModel):
     place_id: int
     residence_type_code: Optional[str] = "household"
@@ -2074,3 +2244,76 @@ def delete_residence(residence_id: int) -> Dict[str, Any]:
         conn.execute("DELETE FROM person_place_residence WHERE residence_id = ?", (residence_id,))
         conn.commit()
         return {"deleted_residence_id": residence_id}
+
+
+@app.get("/api/residences/{residence_id}")
+def get_residence(residence_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(
+            conn,
+            """
+            SELECT r.residence_id, r.person_id, r.place_id, r.residence_type_code,
+                   r.date_start, r.date_end, r.source_id, r.notes,
+                   pl.place_name AS place_name,
+                   COALESCE(p.display_name, p.full_name) AS person_name
+              FROM person_place_residence r
+              JOIN people p ON p.person_id = r.person_id
+              JOIN places pl ON pl.place_id = r.place_id
+             WHERE r.residence_id = ?
+            """,
+            (residence_id,),
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Residence not found")
+        return row
+
+
+class ResidenceUpdate(BaseModel):
+    place_id: int
+    residence_type_code: Optional[str] = "household"
+    date_start: Optional[str] = None
+    date_end: Optional[str] = None
+    source_id: Optional[int] = None
+    notes: Optional[str] = None
+
+
+@app.patch("/api/residences/{residence_id}")
+def update_residence(residence_id: int, body: ResidenceUpdate) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        existing = db.fetch_one(
+            conn,
+            "SELECT residence_id FROM person_place_residence WHERE residence_id = ?",
+            (residence_id,),
+        )
+        if not existing:
+            raise HTTPException(status_code=404, detail="Residence not found")
+        place = db.fetch_one(
+            conn, "SELECT place_id FROM places WHERE place_id = ?", (body.place_id,)
+        )
+        if not place:
+            raise HTTPException(status_code=404, detail="Place not found")
+        try:
+            conn.execute(
+                """
+                UPDATE person_place_residence SET
+                  place_id = ?,
+                  residence_type_code = ?,
+                  date_start = ?, date_end = ?,
+                  source_id = ?,
+                  notes = ?
+                WHERE residence_id = ?
+                """,
+                (
+                    body.place_id,
+                    body.residence_type_code or "household",
+                    _none_if_blank(body.date_start),
+                    _none_if_blank(body.date_end),
+                    body.source_id,
+                    _none_if_blank(body.notes),
+                    residence_id,
+                ),
+            )
+            conn.commit()
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Update failed: {exc}")
+    return get_residence(residence_id)

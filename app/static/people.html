@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Unionism Network — People Workbench</title>
     <link rel="stylesheet" href="/static/styles.css?v=5" />
-    <link rel="stylesheet" href="/static/people.css?v=2" />
+    <link rel="stylesheet" href="/static/people.css?v=3" />
   </head>
   <body class="workbench">
     <aside class="sidebar">
@@ -129,6 +129,9 @@
                     <label>Region<select name="region_relevance_code" data-lookup="region_sc"><option value=""></option></select></label>
                     <label>Date start<input name="date_start" placeholder="YYYY-MM-DD" /></label>
                     <label>Date end<input name="date_end" placeholder="YYYY-MM-DD" /></label>
+                    <label class="fullWidth">Anchor event <span class="muted">(optional — pin this position to a specific event from the Events Workbench)</span>
+                      <select name="event_id" id="posEventSelect"><option value="">(no anchor event)</option></select>
+                    </label>
                     <label>Claim type *<select name="claim_type_code" data-lookup="claim_type" required><option value=""></option></select></label>
                     <label>Evidence type *<select name="evidence_type_code" data-lookup="evidence_type" required><option value=""></option></select></label>
                     <label>Confidence *<select name="confidence_score" data-lookup="confidence_score" required><option value=""></option></select></label>
@@ -364,6 +367,127 @@
       </div>
     </div>
 
+    <!-- Edit position dialog -->
+    <div id="posEditDialog" class="modalOverlay hidden" role="dialog" aria-modal="true">
+      <div class="modalBox" style="width:640px; max-width:95vw;">
+        <div class="modalHeader">
+          <strong>Edit position</strong>
+          <button type="button" class="panelBtn" id="posEditCancelX">×</button>
+        </div>
+        <div class="modalBody">
+          <div class="muted" id="posEditWho" style="margin-bottom:8px;">—</div>
+          <form id="posEditForm" class="entryForm">
+            <input type="hidden" name="position_id" id="posEditId" />
+            <div class="formGrid">
+              <label>Issue *<select name="issue_category_code" data-lookup="issue_category" required><option value=""></option></select></label>
+              <label>Position label *<select name="position_label_code" data-lookup="position_label" required><option value=""></option></select></label>
+              <label>Stance<select name="stance_code" data-lookup="stance"><option value=""></option></select></label>
+              <label>Scale *<select name="scale_level_code" data-lookup="scale_level" required><option value=""></option></select></label>
+              <label>Region<select name="region_relevance_code" data-lookup="region_sc"><option value=""></option></select></label>
+              <label>Date start<input name="date_start" placeholder="YYYY-MM-DD" /></label>
+              <label>Date end<input name="date_end" placeholder="YYYY-MM-DD" /></label>
+              <label class="fullWidth">Anchor event <span class="muted">(optional)</span>
+                <select name="event_id" id="posEditEventSelect"><option value="">(no anchor event)</option></select>
+              </label>
+              <label>Claim type *<select name="claim_type_code" data-lookup="claim_type" required><option value=""></option></select></label>
+              <label>Evidence type *<select name="evidence_type_code" data-lookup="evidence_type" required><option value=""></option></select></label>
+              <label>Confidence *<select name="confidence_score" data-lookup="confidence_score" required><option value=""></option></select></label>
+              <label class="fullWidth">Source *
+                <select name="source_id" class="sourceSelect" required><option value="">— pick source —</option></select>
+                <button type="button" class="smallBtn sourcePickBtn" style="margin-top:4px;">+ New source…</button>
+              </label>
+              <label class="checkboxRow">
+                <input type="checkbox" name="counterevidence_present" value="1" />
+                Counterevidence present
+              </label>
+            </div>
+            <label class="fullWidth">Justification * <span class="muted">(legacy — what's the evidence?)</span>
+              <textarea name="justification_note" rows="2" required></textarea>
+            </label>
+            <label class="fullWidth">Position notes <span class="muted">(narrative; supports chapter footnote tags like <code>[ch.fn 12]</code>)</span>
+              <textarea name="position_notes" rows="3"></textarea>
+            </label>
+            <div class="modalActions">
+              <button type="button" class="panelBtn" id="posEditCancel">Cancel</button>
+              <button type="submit" class="primaryBtn">Save changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit membership dialog -->
+    <div id="membershipEditDialog" class="modalOverlay hidden" role="dialog" aria-modal="true">
+      <div class="modalBox" style="width:560px; max-width:95vw;">
+        <div class="modalHeader">
+          <strong>Edit membership</strong>
+          <button type="button" class="panelBtn" id="membershipEditCancelX">×</button>
+        </div>
+        <div class="modalBody">
+          <div class="muted" id="membershipEditWho" style="margin-bottom:8px;">—</div>
+          <form id="membershipEditForm" class="entryForm">
+            <input type="hidden" name="person_org_id" id="membershipEditId" />
+            <div class="formGrid">
+              <label class="fullWidth">
+                Organization *
+                <input type="text" id="membershipEditOrgSearch" placeholder="Type to search…" autocomplete="off" />
+                <input type="hidden" name="organization_id" id="membershipEditOrgId" />
+                <div class="autocomplete" id="membershipEditOrgAuto"></div>
+              </label>
+              <label>Role<input name="role" placeholder="e.g. president, deacon" /></label>
+              <label>Date start<input name="date_start" placeholder="YYYY-MM-DD" /></label>
+              <label>Date end<input name="date_end" placeholder="YYYY-MM-DD" /></label>
+              <label class="fullWidth">Source
+                <select name="source_id" class="sourceSelect"><option value="">(none)</option></select>
+                <button type="button" class="smallBtn sourcePickBtn" style="margin-top:4px;">+ New source…</button>
+              </label>
+            </div>
+            <label class="fullWidth">Notes
+              <textarea name="notes" rows="2"></textarea>
+            </label>
+            <p class="muted" style="font-size:11px; margin:4px 0 0;">Geographic ties (residence rows) are managed in the Residences section, not here.</p>
+            <div class="modalActions">
+              <button type="button" class="panelBtn" id="membershipEditCancel">Cancel</button>
+              <button type="submit" class="primaryBtn">Save changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit residence dialog -->
+    <div id="residenceEditDialog" class="modalOverlay hidden" role="dialog" aria-modal="true">
+      <div class="modalBox" style="width:520px; max-width:95vw;">
+        <div class="modalHeader">
+          <strong>Edit residence</strong>
+          <button type="button" class="panelBtn" id="residenceEditCancelX">×</button>
+        </div>
+        <div class="modalBody">
+          <div class="muted" id="residenceEditWho" style="margin-bottom:8px;">—</div>
+          <form id="residenceEditForm" class="entryForm">
+            <input type="hidden" name="residence_id" id="residenceEditId" />
+            <div class="formGrid">
+              <label>Place *<select id="residenceEditPlace" name="place_id" required><option value="">(select place)</option></select></label>
+              <label>Type<select name="residence_type_code" data-lookup="residence_type"><option value="">(default: household)</option></select></label>
+              <label>Date start<input name="date_start" placeholder="YYYY-MM-DD" /></label>
+              <label>Date end<input name="date_end" placeholder="YYYY-MM-DD" /></label>
+              <label class="fullWidth">Source
+                <select name="source_id" class="sourceSelect"><option value="">(none)</option></select>
+                <button type="button" class="smallBtn sourcePickBtn" style="margin-top:4px;">+ New source…</button>
+              </label>
+            </div>
+            <label class="fullWidth">Notes
+              <textarea name="notes" rows="2"></textarea>
+            </label>
+            <div class="modalActions">
+              <button type="button" class="panelBtn" id="residenceEditCancel">Cancel</button>
+              <button type="submit" class="primaryBtn">Save changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- Create-organization dialog -->
     <div id="orgDialog" class="modalOverlay hidden" role="dialog" aria-modal="true">
       <div class="modalBox" style="width:480px; max-width:95vw;">
@@ -426,6 +550,6 @@
       </div>
     </div>
 
-    <script src="/static/people.js?v=11"></script>
+    <script src="/static/people.js?v=12"></script>
   </body>
 </html>

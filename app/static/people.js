@@ -443,6 +443,9 @@ function renderPositions(positions) {
     const stancePill = po.stance_code
       ? `<span class="stancePill stance-${escapeHtml(po.stance_code)}">${escapeHtml(po.stance_code)}</span>`
       : '';
+    const eventBadge = po.event_name
+      ? ` · <span class="eventBadge" title="Anchor event">⚑ ${escapeHtml(po.event_name)}</span>`
+      : '';
     const notes = po.position_notes
       ? `<div class="rowItemMeta" style="margin-top:4px; white-space:normal;">${escapeHtml(po.position_notes)}</div>`
       : '';
@@ -455,13 +458,38 @@ function renderPositions(positions) {
         <span class="rowItemMeta">
           ${escapeHtml(po.date_start || '')}${po.date_end ? '–' + escapeHtml(po.date_end) : ''}
           · scale ${escapeHtml(po.scale_level_code || '')}
-          ${srcLabel ? ' · ' + srcLabel : ''}
+          ${srcLabel ? ' · ' + srcLabel : ''}${eventBadge}
         </span>
         ${notes}
+      </div>
+      <div class="rowItemActions">
+        <button type="button" class="smallBtn" data-action="edit-pos" data-pos-id="${po.position_id}">✎</button>
+        <button type="button" class="smallBtn danger" data-action="delete-pos" data-pos-id="${po.position_id}">×</button>
       </div>
     </div>
   `;
   }).join('');
+
+  positionList.querySelectorAll('button[data-action="edit-pos"]').forEach(b => {
+    b.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      openPosEditDialog(Number(b.dataset.posId));
+    });
+  });
+  positionList.querySelectorAll('button[data-action="delete-pos"]').forEach(b => {
+    b.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const posId = Number(b.dataset.posId);
+      if (!confirm('Delete this position? This also removes any position_sources rows linked to it.')) return;
+      try {
+        await fetchJSON(`/api/positions/${posId}`, { method: 'DELETE' });
+        setStatus(`Deleted position ${posId}.`, 'ok');
+        if (selectedPerson) await selectPerson(selectedPerson.person_id);
+      } catch (e) {
+        setStatus(`Delete failed: ${e.message}`, 'err');
+      }
+    });
+  });
 }
 
 // ---- Relationships (expandable, per-event timeline) ----
@@ -710,6 +738,7 @@ if (positionAddForm) {
       counterevidence_present: fd.get('counterevidence_present') ? 1 : 0,
       justification_note: (fd.get('justification_note') || '').toString().trim(),
       position_notes: fd.get('position_notes') || null,
+      event_id: fd.get('event_id') ? Number(fd.get('event_id')) : null,
     };
     const missing = [];
     if (!body.issue_category_code) missing.push('issue');
@@ -738,6 +767,122 @@ if (positionAddForm) {
       await loadList();
     } catch (e) {
       setStatus(`Create failed: ${e.message}`, 'err');
+    }
+  });
+}
+
+// ---- Position edit dialog ----
+
+const posEditDialog = document.getElementById('posEditDialog');
+const posEditForm = document.getElementById('posEditForm');
+const posEditWho = document.getElementById('posEditWho');
+
+function closePosEditDialog() { if (posEditDialog) posEditDialog.classList.add('hidden'); }
+
+async function openPosEditDialog(positionId) {
+  let pos;
+  try { pos = await fetchJSON(`/api/positions/${positionId}`); }
+  catch (e) { setStatus(`Could not load position: ${e.message}`, 'err'); return; }
+
+  // Header label: who + brief identifier.
+  const who = selectedPerson ? (selectedPerson.full_name || `id ${selectedPerson.person_id}`) : '';
+  posEditWho.textContent = `${who} — position ${positionId}: ${pos.position_label_code || ''} on ${pos.issue_category_code || ''}`;
+
+  posEditForm.querySelector('[name="position_id"]').value = positionId;
+
+  // Populate lookup selects from the global lookups cache, then set values.
+  posEditForm.querySelectorAll('select[data-lookup]').forEach(sel => {
+    const key = sel.getAttribute('data-lookup');
+    const items = lookups[key] || [];
+    while (sel.options.length > 1) sel.remove(1);
+    for (const it of items) {
+      const o = document.createElement('option');
+      o.value = it.code;
+      o.textContent = `${it.label} (${it.code})`;
+      sel.appendChild(o);
+    }
+    sel.value = pos[sel.name] != null ? String(pos[sel.name]) : '';
+  });
+
+  // Sources select.
+  await ensureSourcesLoaded();
+  populateSourceSelects(posEditForm);
+  const srcSel = posEditForm.querySelector('.sourceSelect');
+  if (srcSel) srcSel.value = pos.source_id != null ? String(pos.source_id) : '';
+
+  // Anchor-event select (mirror posEventSelect population).
+  await ensureEventsLoaded();
+  const evSel = posEditForm.querySelector('#posEditEventSelect');
+  if (evSel) {
+    while (evSel.options.length > 1) evSel.remove(1);
+    for (const e of allEvents) {
+      const o = document.createElement('option');
+      o.value = e.event_id;
+      const dates = [e.start_date, e.end_date].filter(Boolean).join('–');
+      o.textContent = `${e.event_name}${dates ? ' (' + dates + ')' : ''}`;
+      evSel.appendChild(o);
+    }
+    evSel.value = pos.event_id != null ? String(pos.event_id) : '';
+  }
+
+  posEditForm.querySelector('[name="date_start"]').value = pos.date_start || '';
+  posEditForm.querySelector('[name="date_end"]').value = pos.date_end || '';
+  posEditForm.querySelector('[name="justification_note"]').value = pos.justification_note || '';
+  posEditForm.querySelector('[name="position_notes"]').value = pos.position_notes || '';
+  posEditForm.querySelector('[name="counterevidence_present"]').checked = !!pos.counterevidence_present;
+
+  posEditDialog.classList.remove('hidden');
+}
+
+if (posEditForm) {
+  document.getElementById('posEditCancel').addEventListener('click', closePosEditDialog);
+  document.getElementById('posEditCancelX').addEventListener('click', closePosEditDialog);
+
+  posEditForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(posEditForm);
+    const positionId = Number(fd.get('position_id'));
+    const payload = {
+      issue_category_code: fd.get('issue_category_code'),
+      position_label_code: fd.get('position_label_code'),
+      stance_code: fd.get('stance_code') || null,
+      scale_level_code: fd.get('scale_level_code'),
+      region_relevance_code: fd.get('region_relevance_code') || null,
+      date_start: fd.get('date_start') || null,
+      date_end: fd.get('date_end') || null,
+      claim_type_code: fd.get('claim_type_code'),
+      evidence_type_code: fd.get('evidence_type_code'),
+      confidence_score: fd.get('confidence_score') ? Number(fd.get('confidence_score')) : 0,
+      source_id: fd.get('source_id') ? Number(fd.get('source_id')) : 0,
+      counterevidence_present: fd.get('counterevidence_present') ? 1 : 0,
+      justification_note: (fd.get('justification_note') || '').toString().trim(),
+      position_notes: fd.get('position_notes') || null,
+      event_id: fd.get('event_id') ? Number(fd.get('event_id')) : null,
+    };
+    const missing = [];
+    if (!payload.issue_category_code) missing.push('issue');
+    if (!payload.position_label_code) missing.push('position label');
+    if (!payload.scale_level_code) missing.push('scale');
+    if (!payload.claim_type_code) missing.push('claim type');
+    if (!payload.evidence_type_code) missing.push('evidence type');
+    if (!payload.confidence_score) missing.push('confidence');
+    if (!payload.source_id) missing.push('source');
+    if (!payload.justification_note) missing.push('justification');
+    if (missing.length) {
+      setStatus(`Missing: ${missing.join(', ')}.`, 'err');
+      return;
+    }
+    try {
+      await fetchJSON(`/api/positions/${positionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      closePosEditDialog();
+      setStatus(`Updated position ${positionId}.`, 'ok');
+      if (selectedPerson) await selectPerson(selectedPerson.person_id);
+    } catch (e) {
+      setStatus(`Update failed: ${e.message}`, 'err');
     }
   });
 }
@@ -1000,13 +1145,27 @@ filterConnected.addEventListener('change', renderList);
   try {
     lookups = await fetchJSON('/api/lookups');
     populateLookupSelects();
-    await Promise.all([loadList(), ensureSourcesLoaded(), ensurePlacesLoaded()]);
+    await Promise.all([loadList(), ensureSourcesLoaded(), ensurePlacesLoaded(), ensureEventsLoaded()]);
     populateSourceSelects();
+    populatePositionEventSelect();
     setStatus(`Ready. ${people.length} people loaded.`, 'ok');
   } catch (e) {
     setStatus(`Init failed: ${e.message}`, 'err');
   }
 })();
+
+function populatePositionEventSelect() {
+  const sel = document.getElementById('posEventSelect');
+  if (!sel) return;
+  while (sel.options.length > 1) sel.remove(1);
+  for (const e of allEvents) {
+    const o = document.createElement('option');
+    o.value = e.event_id;
+    const dates = [e.start_date, e.end_date].filter(Boolean).join('–');
+    o.textContent = `${e.event_name}${dates ? ' (' + dates + ')' : ''}`;
+    sel.appendChild(o);
+  }
+}
 
 
 // ============================================================================
@@ -1099,6 +1258,7 @@ function renderMemberships(rows) {
           ${m.notes ? `<div class="rowItemMeta">${escapeHtml(m.notes)}</div>` : ''}
         </div>
         <div class="rowItemActions">
+          <button type="button" class="smallBtn" data-action="edit-membership" data-id="${m.person_org_id}">✎</button>
           <button type="button" class="smallBtn danger" data-action="delete-membership" data-id="${m.person_org_id}">×</button>
         </div>
       </div>
@@ -1106,6 +1266,12 @@ function renderMemberships(rows) {
   }).join('');
   // ... rest of the function (delete listeners) stays the same
 
+  membershipList.querySelectorAll('button[data-action="edit-membership"]').forEach(b => {
+    b.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      openMembershipEditDialog(Number(b.dataset.id));
+    });
+  });
   membershipList.querySelectorAll('button[data-action="delete-membership"]').forEach(b => {
     b.addEventListener('click', async () => {
       const id = Number(b.dataset.id);
@@ -1142,11 +1308,18 @@ function renderResidences(rows) {
           ${r.notes ? `<div class="rowItemMeta">${escapeHtml(r.notes)}</div>` : ''}
         </div>
         <div class="rowItemActions">
+          <button type="button" class="smallBtn" data-action="edit-residence" data-id="${r.residence_id}">✎</button>
           <button type="button" class="smallBtn danger" data-action="delete-residence" data-id="${r.residence_id}">×</button>
         </div>
       </div>
     `;
   }).join('');
+  residenceList.querySelectorAll('button[data-action="edit-residence"]').forEach(b => {
+    b.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      openResidenceEditDialog(Number(b.dataset.id));
+    });
+  });
   residenceList.querySelectorAll('button[data-action="delete-residence"]').forEach(b => {
     b.addEventListener('click', async () => {
       const id = Number(b.dataset.id);
@@ -1420,3 +1593,215 @@ if (sourceCreateForm) {
     }
   });
 }
+
+// ---- Membership edit dialog ----
+
+const membershipEditDialog = document.getElementById('membershipEditDialog');
+const membershipEditForm = document.getElementById('membershipEditForm');
+const membershipEditWho = document.getElementById('membershipEditWho');
+const membershipEditOrgSearch = document.getElementById('membershipEditOrgSearch');
+const membershipEditOrgIdInput = document.getElementById('membershipEditOrgId');
+const membershipEditOrgAuto = document.getElementById('membershipEditOrgAuto');
+
+function closeMembershipEditDialog() {
+  if (membershipEditDialog) membershipEditDialog.classList.add('hidden');
+  if (membershipEditOrgAuto) membershipEditOrgAuto.classList.remove('open');
+}
+
+function renderMembershipEditOrgAuto(matches) {
+  if (!membershipEditOrgAuto) return;
+  if (!matches.length) {
+    membershipEditOrgAuto.classList.remove('open');
+    membershipEditOrgAuto.innerHTML = '';
+    return;
+  }
+  membershipEditOrgAuto.classList.add('open');
+  membershipEditOrgAuto.innerHTML = matches.slice(0, 20).map(o => `
+    <div class="acItem" data-id="${o.organization_id}">
+      ${escapeHtml(o.name)}
+      <span class="muted">(${escapeHtml(o.org_type_code || '—')})</span>
+    </div>
+  `).join('');
+  membershipEditOrgAuto.querySelectorAll('.acItem').forEach(it => {
+    it.addEventListener('mousedown', ev => {
+      ev.preventDefault();
+      const oid = Number(it.dataset.id);
+      const found = allOrgs.find(o => o.organization_id === oid);
+      membershipEditOrgIdInput.value = oid;
+      membershipEditOrgSearch.value = found ? found.name : `id ${oid}`;
+      membershipEditOrgAuto.classList.remove('open');
+    });
+  });
+}
+
+if (membershipEditOrgSearch) {
+  membershipEditOrgSearch.addEventListener('focus', () => { ensureOrgsLoaded(); });
+  membershipEditOrgSearch.addEventListener('input', () => {
+    const q = membershipEditOrgSearch.value.trim().toLowerCase();
+    membershipEditOrgIdInput.value = '';
+    if (!q) { renderMembershipEditOrgAuto([]); return; }
+    const hits = allOrgs.filter(o => (o.name || '').toLowerCase().includes(q));
+    renderMembershipEditOrgAuto(hits);
+  });
+  membershipEditOrgSearch.addEventListener('blur', () => {
+    setTimeout(() => membershipEditOrgAuto && membershipEditOrgAuto.classList.remove('open'), 150);
+  });
+}
+
+async function openMembershipEditDialog(personOrgId) {
+  let m;
+  try { m = await fetchJSON(`/api/memberships/${personOrgId}`); }
+  catch (e) { setStatus(`Could not load membership: ${e.message}`, 'err'); return; }
+
+  await ensureOrgsLoaded();
+  await ensureSourcesLoaded();
+
+  const who = selectedPerson ? (selectedPerson.full_name || `id ${selectedPerson.person_id}`) : (m.person_name || '');
+  membershipEditWho.textContent = `${who} — membership ${personOrgId}`;
+
+  membershipEditForm.querySelector('[name="person_org_id"]').value = personOrgId;
+  membershipEditOrgIdInput.value = m.organization_id != null ? String(m.organization_id) : '';
+  membershipEditOrgSearch.value = m.organization_name || (m.organization_id ? `id ${m.organization_id}` : '');
+  membershipEditOrgAuto.classList.remove('open');
+  membershipEditOrgAuto.innerHTML = '';
+
+  membershipEditForm.querySelector('[name="role"]').value = m.role || '';
+  membershipEditForm.querySelector('[name="date_start"]').value = m.date_start || '';
+  membershipEditForm.querySelector('[name="date_end"]').value = m.date_end || '';
+  membershipEditForm.querySelector('[name="notes"]').value = m.notes || '';
+
+  populateSourceSelects(membershipEditForm);
+  const srcSel = membershipEditForm.querySelector('.sourceSelect');
+  if (srcSel) srcSel.value = m.source_id != null ? String(m.source_id) : '';
+
+  membershipEditDialog.classList.remove('hidden');
+}
+
+if (membershipEditForm) {
+  document.getElementById('membershipEditCancel').addEventListener('click', closeMembershipEditDialog);
+  document.getElementById('membershipEditCancelX').addEventListener('click', closeMembershipEditDialog);
+
+  membershipEditForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(membershipEditForm);
+    const personOrgId = Number(fd.get('person_org_id'));
+    const oid = Number(membershipEditOrgIdInput.value || 0);
+    if (!oid) { setStatus('Pick an organization.', 'err'); return; }
+    const payload = {
+      organization_id: oid,
+      role: fd.get('role') || null,
+      date_start: fd.get('date_start') || null,
+      date_end: fd.get('date_end') || null,
+      source_id: fd.get('source_id') ? Number(fd.get('source_id')) : null,
+      notes: fd.get('notes') || null,
+    };
+    try {
+      await fetchJSON(`/api/memberships/${personOrgId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      closeMembershipEditDialog();
+      setStatus(`Updated membership ${personOrgId}.`, 'ok');
+      if (selectedPerson) await selectPerson(selectedPerson.person_id);
+    } catch (e) {
+      setStatus(`Update failed: ${e.message}`, 'err');
+    }
+  });
+}
+
+// ---- Residence edit dialog ----
+
+const residenceEditDialog = document.getElementById('residenceEditDialog');
+const residenceEditForm = document.getElementById('residenceEditForm');
+const residenceEditWho = document.getElementById('residenceEditWho');
+const residenceEditPlaceSel = document.getElementById('residenceEditPlace');
+
+function closeResidenceEditDialog() {
+  if (residenceEditDialog) residenceEditDialog.classList.add('hidden');
+}
+
+function populateResidenceEditPlaceSelect(currentPlaceId) {
+  if (!residenceEditPlaceSel) return;
+  while (residenceEditPlaceSel.options.length > 1) residenceEditPlaceSel.remove(1);
+  for (const p of allPlaces) {
+    const o = document.createElement('option');
+    o.value = p.place_id;
+    o.textContent = p.place_name || `id ${p.place_id}`;
+    residenceEditPlaceSel.appendChild(o);
+  }
+  residenceEditPlaceSel.value = currentPlaceId != null ? String(currentPlaceId) : '';
+}
+
+async function openResidenceEditDialog(residenceId) {
+  let r;
+  try { r = await fetchJSON(`/api/residences/${residenceId}`); }
+  catch (e) { setStatus(`Could not load residence: ${e.message}`, 'err'); return; }
+
+  await ensurePlacesLoaded();
+  await ensureSourcesLoaded();
+
+  const who = selectedPerson ? (selectedPerson.full_name || `id ${selectedPerson.person_id}`) : (r.person_name || '');
+  residenceEditWho.textContent = `${who} — residence ${residenceId}`;
+
+  residenceEditForm.querySelector('[name="residence_id"]').value = residenceId;
+  populateResidenceEditPlaceSelect(r.place_id);
+
+  // Lookups (residence_type)
+  residenceEditForm.querySelectorAll('select[data-lookup]').forEach(sel => {
+    const key = sel.getAttribute('data-lookup');
+    const items = lookups[key] || [];
+    while (sel.options.length > 1) sel.remove(1);
+    for (const it of items) {
+      const o = document.createElement('option');
+      o.value = it.code;
+      o.textContent = `${it.label} (${it.code})`;
+      sel.appendChild(o);
+    }
+    sel.value = r[sel.name] != null ? String(r[sel.name]) : '';
+  });
+
+  residenceEditForm.querySelector('[name="date_start"]').value = r.date_start || '';
+  residenceEditForm.querySelector('[name="date_end"]').value = r.date_end || '';
+  residenceEditForm.querySelector('[name="notes"]').value = r.notes || '';
+
+  populateSourceSelects(residenceEditForm);
+  const srcSel = residenceEditForm.querySelector('.sourceSelect');
+  if (srcSel) srcSel.value = r.source_id != null ? String(r.source_id) : '';
+
+  residenceEditDialog.classList.remove('hidden');
+}
+
+if (residenceEditForm) {
+  document.getElementById('residenceEditCancel').addEventListener('click', closeResidenceEditDialog);
+  document.getElementById('residenceEditCancelX').addEventListener('click', closeResidenceEditDialog);
+
+  residenceEditForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(residenceEditForm);
+    const residenceId = Number(fd.get('residence_id'));
+    const placeId = fd.get('place_id');
+    if (!placeId) { setStatus('Select a place.', 'err'); return; }
+    const payload = {
+      place_id: Number(placeId),
+      residence_type_code: fd.get('residence_type_code') || 'household',
+      date_start: fd.get('date_start') || null,
+      date_end: fd.get('date_end') || null,
+      source_id: fd.get('source_id') ? Number(fd.get('source_id')) : null,
+      notes: fd.get('notes') || null,
+    };
+    try {
+      await fetchJSON(`/api/residences/${residenceId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      closeResidenceEditDialog();
+      setStatus(`Updated residence ${residenceId}.`, 'ok');
+      if (selectedPerson) await selectPerson(selectedPerson.person_id);
+    } catch (e) {
+      setStatus(`Update failed: ${e.message}`, 'err');
+    }
+  });
+}
+
