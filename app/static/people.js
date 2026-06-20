@@ -34,6 +34,8 @@ const membershipList = document.getElementById('membershipList');
 const membershipCountEl = document.getElementById('membershipCount');
 const residenceList = document.getElementById('residenceList');
 const residenceCountEl = document.getElementById('residenceCount');
+const personSourcesList = document.getElementById('personSourcesList');
+const personSourcesCountEl = document.getElementById('personSourcesCount');
 
 const deleteBtn = document.getElementById('deleteBtn');
 const deleteDialog = document.getElementById('deleteDialog');
@@ -362,6 +364,8 @@ newPersonBtn.addEventListener('click', () => {
   membershipCountEl.textContent = '(0)';
   residenceList.innerHTML = '<div class="muted">Save the person first to add residences.</div>';
   residenceCountEl.textContent = '(0)';
+  personSourcesList.innerHTML = '<div class="muted">Save the person first to associate sources.</div>';
+  personSourcesCountEl.textContent = '(0)';
   showEditor();
   bioForm.querySelector('input[name="full_name"]').focus();
 });
@@ -381,6 +385,7 @@ async function selectPerson(personId) {
     renderRelationships(p.relationships || []);
     renderMemberships(p.memberships || []);
     renderResidences(p.residences || []);
+    renderPersonSources(p.person_sources || []);
     document.querySelectorAll('.listRow.selected').forEach(r => r.classList.remove('selected'));
     const row = listEl.querySelector(`.listRow[data-person-id="${personId}"]`);
     if (row) {
@@ -1284,6 +1289,74 @@ function renderMemberships(rows) {
         setStatus(`Delete failed: ${e.message}`, 'err');
       }
     });
+  });
+}
+
+// ---- Person Sources ----
+
+function renderPersonSources(rows) {
+  personSourcesCountEl.textContent = `(${rows.length})`;
+  if (!rows.length) {
+    personSourcesList.innerHTML = '<div class="muted">No sources associated yet.</div>';
+    return;
+  }
+  personSourcesList.innerHTML = rows.map(ps => {
+    const year = ps.date_created ? ps.date_created.slice(0, 4) : '';
+    const meta = [ps.creator, year].filter(Boolean).join(', ');
+    return `
+      <div class="rowItem">
+        <div class="rowItemMain">
+          <strong>📄 ${escapeHtml(ps.title || '(untitled)')}</strong>
+          ${meta ? `<span class="rowItemMeta">${escapeHtml(meta)}</span>` : ''}
+          ${ps.notes ? `<div class="rowItemMeta">${escapeHtml(ps.notes)}</div>` : ''}
+        </div>
+        <div class="rowItemActions">
+          <button type="button" class="smallBtn danger" data-action="delete-person-source" data-id="${ps.person_source_id}">×</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  personSourcesList.querySelectorAll('button[data-action="delete-person-source"]').forEach(b => {
+    b.addEventListener('click', async () => {
+      const id = Number(b.dataset.id);
+      if (!confirm('Remove this source association?')) return;
+      try {
+        await fetchJSON(`/api/person_sources/${id}`, { method: 'DELETE' });
+        setStatus('Source association removed.', 'ok');
+        if (selectedPerson) await selectPerson(selectedPerson.person_id);
+      } catch (e) {
+        setStatus(`Delete failed: ${e.message}`, 'err');
+      }
+    });
+  });
+}
+
+const personSourcesAddForm = document.getElementById('personSourcesAddForm');
+if (personSourcesAddForm) {
+  personSourcesAddForm.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    if (!selectedPerson) return;
+    const fd = new FormData(personSourcesAddForm);
+    const sourceId = fd.get('source_id');
+    if (!sourceId) { setStatus('Select a source.', 'err'); return; }
+    const body = {
+      source_id: Number(sourceId),
+      notes: fd.get('notes') || null,
+    };
+    try {
+      await fetchJSON(`/api/people/${selectedPerson.person_id}/sources`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      setStatus('Source associated.', 'ok');
+      personSourcesAddForm.reset();
+      const det = personSourcesAddForm.closest('details');
+      if (det) det.open = false;
+      await selectPerson(selectedPerson.person_id);
+    } catch (e) {
+      setStatus(`Save failed: ${e.message}`, 'err');
+    }
   });
 }
 

@@ -233,6 +233,30 @@
               </details>
             </section>
 
+            <!-- Sources associated with this person -->
+            <section class="editorSection">
+              <h3>Sources <span class="muted" id="personSourcesCount">(0)</span></h3>
+              <div id="personSourcesList" class="rowList"></div>
+
+              <details class="addBlock">
+                <summary class="addSummary">+ Associate source</summary>
+                <form id="personSourcesAddForm" class="entryForm addForm">
+                  <div class="formGrid">
+                    <label class="fullWidth">Source *
+                      <select name="source_id" class="sourceSelect" required><option value="">— pick source —</option></select>
+                      <button type="button" class="smallBtn sourcePickBtn" style="margin-top:4px;">+ New source…</button>
+                    </label>
+                  </div>
+                  <label class="fullWidth">Notes
+                    <textarea name="notes" rows="2"></textarea>
+                  </label>
+                  <div class="formActions">
+                    <button type="submit" class="primaryBtn">Associate source</button>
+                  </div>
+                </form>
+              </details>
+            </section>
+
             <!-- Residences (person_place_residence) -->
             <section class="editorSection">
               <h3>Residences <span class="muted" id="residenceCount">(0)</span></h3>

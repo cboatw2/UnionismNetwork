@@ -631,6 +631,18 @@ def get_person(person_id: int) -> Dict[str, Any]:
             """,
             (person_id,),
         )
+        row["person_sources"] = db.fetch_all(
+            conn,
+            """
+            SELECT ps.person_source_id, ps.source_id, ps.notes,
+                   s.title, s.creator, s.date_created, s.source_type_code
+            FROM person_sources ps
+            JOIN sources s ON s.source_id = ps.source_id
+            WHERE ps.person_id = ?
+            ORDER BY s.title
+            """,
+            (person_id,),
+        )
         return row
 
 
@@ -2317,3 +2329,58 @@ def update_residence(residence_id: int, body: ResidenceUpdate) -> Dict[str, Any]
         except Exception as exc:
             raise HTTPException(status_code=400, detail=f"Update failed: {exc}")
     return get_residence(residence_id)
+
+
+# ============================================================================
+# Person Sources
+# ============================================================================
+
+class PersonSourceIn(BaseModel):
+    source_id: int
+    notes: Optional[str] = None
+
+
+@app.post("/api/people/{person_id}/sources")
+def add_person_source(person_id: int, body: PersonSourceIn) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        person = db.fetch_one(conn, "SELECT person_id FROM people WHERE person_id = ?", (person_id,))
+        if not person:
+            raise HTTPException(status_code=404, detail="Person not found")
+        source = db.fetch_one(conn, "SELECT source_id FROM sources WHERE source_id = ?", (body.source_id,))
+        if not source:
+            raise HTTPException(status_code=404, detail="Source not found")
+        try:
+            cur = conn.execute(
+                "INSERT INTO person_sources (person_id, source_id, notes) VALUES (?, ?, ?)",
+                (person_id, body.source_id, _none_if_blank(body.notes)),
+            )
+            new_id = int(cur.lastrowid)
+            conn.commit()
+            return db.fetch_one(
+                conn,
+                """
+                SELECT ps.person_source_id, ps.source_id, ps.notes,
+                       s.title, s.creator, s.date_created, s.source_type_code
+                FROM person_sources ps
+                JOIN sources s ON s.source_id = ps.source_id
+                WHERE ps.person_source_id = ?
+                """,
+                (new_id,),
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Insert failed: {exc}")
+
+
+@app.delete("/api/person_sources/{person_source_id}")
+def delete_person_source(person_source_id: int) -> Dict[str, Any]:
+    with db.get_conn() as conn:
+        row = db.fetch_one(
+            conn,
+            "SELECT person_source_id FROM person_sources WHERE person_source_id = ?",
+            (person_source_id,),
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Person source link not found")
+        conn.execute("DELETE FROM person_sources WHERE person_source_id = ?", (person_source_id,))
+        conn.commit()
+        return {"deleted_person_source_id": person_source_id}

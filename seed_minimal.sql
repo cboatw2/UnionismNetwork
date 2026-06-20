@@ -57,7 +57,11 @@ INSERT OR IGNORE INTO lkp_position_label (position_label_code, label) VALUES
 ('states_rights_unionist', 'States rights Unionist'),
 ('pro_slavery_unionist', 'Pro-slavery Unionist'),
 ('mixed_alignment', 'Mixed alignment'),
-('unknown', 'Unknown/Unclear');
+('unknown', 'Unknown/Unclear'),
+('secessionist', 'Secessionist'),
+('immediate_secessionist', 'Immediate Secessionist'),
+('cooperationist', 'Cooperationist'),
+('submissionist', 'Submissionist');
 
 INSERT OR IGNORE INTO lkp_scale_level (scale_level_code, label) VALUES
 ('local', 'Local'),
@@ -123,9 +127,10 @@ INSERT OR IGNORE INTO lkp_place_type (place_type_code, label) VALUES
 ('other', 'Other');
 
 INSERT OR IGNORE INTO lkp_region_sc (region_sc_code, label) VALUES
-('upcountry', 'Upcountry/Backcountry'),
+('upcountry', 'Upcountry/Piedmont'),
 ('lowcountry', 'Lowcountry'),
 ('midlands', 'Midlands'),
+('pee_dee', 'Pee Dee (Cotton Belt)'),
 ('outside_sc', 'Outside South Carolina');
 
 COMMIT;

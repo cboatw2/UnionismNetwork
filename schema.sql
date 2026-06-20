@@ -387,6 +387,14 @@ INSERT OR IGNORE INTO lkp_stance (stance_code, label) VALUES
 	('qualified', 'Qualified / partial commitment'),
 	('unknown', 'Unknown / insufficient evidence');
 
+CREATE TABLE IF NOT EXISTS person_sources (
+	person_source_id INTEGER PRIMARY KEY,
+	person_id INTEGER NOT NULL REFERENCES people(person_id) ON DELETE CASCADE,
+	source_id INTEGER NOT NULL REFERENCES sources(source_id) ON DELETE CASCADE,
+	notes TEXT,
+	UNIQUE (person_id, source_id)
+);
+
 CREATE TRIGGER IF NOT EXISTS trg_people_updated_at
 AFTER UPDATE ON people
 FOR EACH ROW
