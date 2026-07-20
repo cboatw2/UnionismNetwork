@@ -24,6 +24,7 @@ INSERT OR IGNORE INTO lkp_event_type (event_type_code, label) VALUES
 ('election', 'Election'),
 ('military_event', 'Military event'),
 ('party_realignment', 'Party realignment'),
+('social_event', 'Social gathering / party / dinner; not primarily a political gathering'),
 ('publication', 'Publication'),
 ('other', 'Other');
 
