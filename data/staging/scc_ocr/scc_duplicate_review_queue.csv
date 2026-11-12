@@ -1,0 +1,4 @@
+imported_id,imported_name,imported_org_rows,existing_id,existing_name,existing_org_rows,existing_rel_rows,recommendation,rationale
+1466,"James Postell",1,845,"John Postell",0,0,HOLD,"Different first names (James vs John); existing row is weak but identity not provable from current evidence."
+1455,"John J. Davis",1,276,"John N. Davis",1,6,HOLD,"Middle initial conflict (J vs N) and existing person has independent 1832 political profile."
+1468,"Joseph Taylor",1,838,"Josiah Taylor",0,0,HOLD,"Different given names; similarity may be OCR/NER artifact but not enough to merge automatically."

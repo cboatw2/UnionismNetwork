@@ -29,19 +29,11 @@ YEAR_RE = re.compile(r"(\d{4})")
 
 @dataclass
 class Attendee:
-    person_id: int
-    full_name: str
-    role: Optional[str]
-    date_start: Optional[str]
-    date_end: Optional[str]
-
-    @property
-    def start_year(self) -> Optional[int]:
-        return extract_year(self.date_start)
-
-    @property
-    def end_year(self) -> Optional[int]:
-        return extract_year(self.date_end)
+  person_id: int
+  full_name: str
+  role: Optional[str]
+  start_year: Optional[int]
+  end_year: Optional[int]
 
 
 def extract_year(value: Optional[str]) -> Optional[int]:
@@ -79,7 +71,36 @@ def fetch_attendees(conn: sqlite3.Connection) -> list[Attendee]:
         ORDER BY COALESCE(po.date_start, '9999'), p.full_name
         """
     ).fetchall()
-    return [Attendee(*row) for row in rows]
+
+    # One person can have multiple SCC affiliation rows; collapse to one node.
+    by_person: dict[int, Attendee] = {}
+    for person_id, full_name, role, date_start, date_end in rows:
+        sy = extract_year(date_start)
+        ey = extract_year(date_end)
+
+        existing = by_person.get(person_id)
+        if existing is None:
+            by_person[person_id] = Attendee(
+                person_id=person_id,
+                full_name=full_name,
+                role=role,
+                start_year=sy,
+                end_year=ey,
+            )
+            continue
+
+        if sy is not None:
+            if existing.start_year is None or sy < existing.start_year:
+                existing.start_year = sy
+        if ey is not None:
+            if existing.end_year is None or ey > existing.end_year:
+                existing.end_year = ey
+        if (not existing.role) and role:
+            existing.role = role
+
+    attendees = list(by_person.values())
+    attendees.sort(key=lambda a: (a.start_year if a.start_year is not None else 9999, a.full_name))
+    return attendees
 
 
 def fetch_relationship_edges(conn: sqlite3.Connection, attendee_ids: set[int]) -> list[dict]:
@@ -395,8 +416,6 @@ def main() -> None:
             "person_id": a.person_id,
             "full_name": a.full_name,
             "role": a.role,
-            "date_start": a.date_start,
-            "date_end": a.date_end,
             "start_year": a.start_year,
             "end_year": a.end_year,
         }
@@ -405,7 +424,7 @@ def main() -> None:
 
     write_csv(
         OUT_DIR / "scc_attendees.csv",
-        ["person_id", "full_name", "role", "date_start", "date_end", "start_year", "end_year"],
+        ["person_id", "full_name", "role", "start_year", "end_year"],
         attendee_rows,
     )
     write_csv(

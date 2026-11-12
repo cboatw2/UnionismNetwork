@@ -1,0 +1,1344 @@
+person_id,name,tcl_pages,date_start,date_end,name_verified,action
+1829,? Robert,60,1828,1828,False,create person + insert
+1830,[surname illegible] John,70,1833,1833,False,create person + insert
+1831,A. B. Shackelford,30,1816,1818,False,create person + insert
+1566,A. Baynard,27,1814,1817,False,update
+1832,A. Bradley,54,1825,1825,False,create person + insert
+1648,A. Campbell,31,1816,1817,False,update
+1833,A. E. Pearson,66 68 69,1831,1833,False,create person + insert
+1834,A. Ellerbe,62,1829,1829,False,create person + insert
+1835,A. H. Boykin,68 69,1832,1833,False,create person + insert
+1836,A. Haig,59 60,1827,1828,False,create person + insert
+1585,A. P. Butler,28,1815,1817,False,update
+1837,A. W. Adams,69,1833,1833,False,create person + insert
+1838,Abel E. Evans,33 40,1816,1817,False,create person + insert
+1820,Abner B. Parrott,44,1819,1819,False,update
+1839,Abram A. McWillie,68 69,1832,1833,False,create person + insert
+1840,Adams,58,1827,1827,False,create person + insert
+1841,Adolphus G. Nott,68 69,1832,1833,False,create person + insert
+1842,Albert C. A. Muller,24,1814,1816,False,create person + insert
+1843,Albert G. Goodwyn,51 52 54 55,1823,1826,False,create person + insert
+1844,Albert McGinney,13,1808,1812,False,create person + insert
+583,Alexander Bowie,8,1807,1809,False,insert
+1845,Alexander H. Mazyck,53 54 55,1824,1826,False,create person + insert
+1846,Alexander L. Barron,56 57,1826,1827,False,create person + insert
+1847,Alexander L. Edwards,52 54 55,1824,1826,False,create person + insert
+1802,Alexander Lowry,30 39 40,1817,1818,False,update
+1848,Alexander M. McIver,24 37 38,1813,1817,False,create person + insert
+1849,Alexander McBochet,19,1811,1812,False,create person + insert
+1850,Alexander Montgomery,66,1831,1831,False,create person + insert
+1851,Alexander Q. Bradley,52,1824,1824,False,create person + insert
+1852,Alexander R. Ellerbe,63 65,1830,1831,False,create person + insert
+1853,Alexander R. Taylor,60 62 63,1828,1830,False,create person + insert
+1854,Alexander S. Campbell,20 39,1811,1817,False,create person + insert
+1758,Alexander S. M. Brevard,41 43 44,1818,1820,False,update
+1855,Alexander Williams,43 44,1819,1820,False,create person + insert
+1856,Alfred Brevard,13,1809,1812,False,create person + insert
+1857,Alfred Bynum,45 47 48,1820,1822,False,create person + insert
+1858,Alfred Raoul,68 69,1832,1833,False,create person + insert
+1859,Algernon F. Clifton,52 54 55,1824,1826,False,create person + insert
+1860,Alister Garden,60 61 63,1828,1830,False,create person + insert
+1861,Allen R. Perkins,16,1811,1811,False,create person + insert
+1862,Alston F. White,56 58,1826,1827,False,create person + insert
+1863,Amasa J. Park,46 47 48,1820,1822,False,create person + insert
+1864,Ambrose W. O'Bannon,45,1820,1820,False,create person + insert
+1865,Amzi W. Alexander,45 46,1820,1821,False,create person + insert
+1447,Anderson Crenshaw,4,1805,1807,False,update
+1866,Andrew Corley,71,1834,1834,False,create person + insert
+1867,Andrew G. Magrath,64 65,1830,1831,False,create person + insert
+1868,Andrew H. Cheves,62 63 65,1829,1831,False,create person + insert
+1869,Andrew M. Burnet,60 61 63,1828,1830,False,create person + insert
+1702,Andrew P. Butler,37 38,1816,1817,False,update
+1870,Andrew P. Calhoun,65 67,1831,1832,False,create person + insert
+1871,Andrew P. Earle,24,1813,1816,False,create person + insert
+1872,Andrew P. Virdon,64 65,1830,1831,False,create person + insert
+1873,Andrew R. Gowan,15,1810,1813,False,create person + insert
+1807,Anthony B. Shackelford,39 40,1817,1818,False,update
+1874,Anthony T. Graves,19,1811,1813,False,create person + insert
+1875,Anthony W. Hampton,6 7,1806,1808,False,create person + insert
+1700,Archibald C. Baynard,37 38,1816,1817,False,update
+1876,Archibald H. Seabrook,70,1833,1833,False,create person + insert
+1877,Archibald Young,46 47 48,1820,1822,False,create person + insert
+1878,Artemas T. Darby,52 54 55,1824,1826,False,create person + insert
+862,Arthur,59,1827,1827,False,insert
+1677,Arthur Buist,24 36,1813,1816,False,update
+1879,Arthur F. Holmes,52,1824,1824,False,create person + insert
+1880,Arthur O'Hara,14,1809,1812,False,create person + insert
+1881,Arthur S. Starr,50 51,1823,1824,False,create person + insert
+1882,Augustus Brickell Faust,70 71,1833,1834,False,create person + insert
+1883,Augustus Noel,59,1827,1827,False,create person + insert
+1884,Augustus T. Gaillard,24,1813,1813,False,create person + insert
+1885,B. Bostick,11,1809,1809,False,create person + insert
+1886,B. C. Webb,54 56,1825,1826,False,create person + insert
+1887,B. F. Linton,32,1817,1819,False,create person + insert
+1653,B. Green,31,1816,1817,False,update
+1888,B. H. Rutledge,23,1813,1814,False,create person + insert
+1889,B. J. Earle,11,1808,1811,False,create person + insert
+1890,B. J. S. Everett,22,1812,1815,False,create person + insert
+1891,B. L. Reid,69,1833,1833,False,create person + insert
+1892,B. R. Jenkins,69,1833,1833,False,create person + insert
+1472,Barnaby Branford,7,1806,1806,False,update (was 1806-None)
+1446,Basil Manly,45 46,1820,1821,False,insert
+1893,Beaufort A. Wallace,52 54,1824,1825,False,create person + insert
+55,Beaufort Watts,11 13,1809,1812,False,insert
+1894,Benjamin B. Nixon,68 69,1832,1833,False,create person + insert
+1895,Benjamin Bailey,71,1834,1834,False,create person + insert
+1896,Benjamin Bostick,14,1811,1811,False,create person + insert
+1897,Benjamin C. Cropp,21,1811,1813,False,create person + insert
+1898,Benjamin C. Fishburne,52 54 55,1824,1826,False,create person + insert
+1899,Benjamin C. Prestman,61 63,1829,1830,False,create person + insert
+1900,Benjamin F. Johnston,61 63,1829,1830,False,create person + insert
+1743,Benjamin F. Linton,39 41 42,1817,1819,False,update
+1901,Benjamin F. Massey,66 68 69,1831,1833,False,create person + insert
+1902,Benjamin F. Scott,62 64 65,1829,1831,False,create person + insert
+1903,Benjamin F. Trapier,66 68 69,1831,1833,False,create person + insert
+1904,Benjamin F. Williamson,68 69,1832,1833,False,create person + insert
+1905,Benjamin Franklin Reid,71,1834,1834,False,create person + insert
+1906,Benjamin G. Green,39 41 42,1817,1819,False,create person + insert
+1907,Benjamin G. Shields,64,1830,1830,False,create person + insert
+1908,Benjamin H. Fleming,43 45 46,1819,1821,False,create person + insert
+1909,Benjamin H. Johnson,62 64,1829,1830,False,create person + insert
+1910,Benjamin H. Rice,60 61,1828,1829,False,create person + insert
+1911,Benjamin Heriot,5,1805,1807,False,create person + insert
+1912,Benjamin J. Elmore,10,1808,1810,False,create person + insert
+1913,Benjamin J. Harrison,61 63,1829,1830,False,create person + insert
+1914,Benjamin R. Jones,66 67 69,1831,1833,False,create person + insert
+1915,Benjamin Roper Jenkins,71,1834,1834,False,create person + insert
+1469,Benjamin Taylor,7,1805,1807,False,update (was 1805-None)
+1916,Benjamin Tobson,14,1809,1812,False,create person + insert
+1917,Benjamin Waring,5,1805,1808,False,create person + insert
+1918,Benjamin Whitner,8,1807,1809,False,create person + insert
+1919,Benjamin Wilkinson,70 71,1833,1834,False,create person + insert
+1920,Beor Johnston,12,1809,1811,False,create person + insert
+1921,Billington M. Sanders,8,1808,1809,False,create person + insert
+1922,Boyce,59 60,1827,1828,False,create person + insert
+1923,Boykin Witherspoon,66 68 69,1831,1833,False,create person + insert
+1924,Burrel B. Cook,16,1811,1811,False,create person + insert
+1925,C. D. Miller,68,1832,1832,False,create person + insert
+1658,C. Edwards,33,1816,1817,False,update
+1926,C. J. Colcock,32,1817,1819,False,create person + insert
+1927,C. Le Roy Boyd,47,1821,1821,False,create person + insert
+1928,C. M. Gregg,32,1817,1819,False,create person + insert
+1929,C. S. Keith,33,1817,1817,False,create person + insert
+1930,Calvin Foster,49,1822,1822,False,create person + insert
+1931,Calvin V. Sandefur,68,1832,1832,False,create person + insert
+1932,Carnot Bellinger,50 51,1823,1824,False,create person + insert
+1933,Charles A. De Saussure,45 50,1820,1823,False,create person + insert
+1762,Charles A. Edwards,40 41 43 44,1817,1820,False,update
+1742,Charles A. Lide,39 41,1817,1818,False,update
+1934,Charles A. Poellnitz,59 60 61,1827,1829,False,create person + insert
+1935,Charles A. Saxon,10,1808,1810,False,create person + insert
+1936,Charles C. Gregorie,54,1825,1825,False,create person + insert
+1937,Charles C. Gregory,51 53,1823,1824,False,create person + insert
+1938,Charles C. Hay,66 67 69,1831,1833,False,create person + insert
+1939,Charles C. Henderson,49,1822,1822,False,create person + insert
+1940,Charles C. Strohecker,47,1821,1821,False,create person + insert
+1941,Charles Course,5,1805,1808,False,create person + insert
+1942,Charles D. Conner,14,1811,1812,False,create person + insert
+1943,Charles E. Rowand,31 38 39,1815,1817,False,create person + insert
+1944,Charles Ellis,9,1806,1806,False,create person + insert
+1945,Charles F. Butler,51 54,1824,1825,False,create person + insert
+1946,Charles Fishburn,28,1815,1817,False,create person + insert
+1582,Charles Fishburne,37 38,1816,1817,False,update
+1947,Charles Freer,50 52 53,1823,1825,False,create person + insert
+1948,Charles Gignilliat,10,1808,1808,False,create person + insert
+1949,Charles Gillayson,14,1810,1812,False,create person + insert
+1950,Charles H. Hunter,20,1812,1814,False,create person + insert
+1951,Charles H. Rolando,15,1810,1812,False,create person + insert
+1952,Charles Huggins,20,1811,1814,False,create person + insert
+1953,Charles Kershaw,70,1833,1833,False,create person + insert
+1954,Charles Kershaw Jr.,71,1834,1834,False,create person + insert
+1955,Charles Le Roy Boyd,48,1822,1822,False,create person + insert
+1956,Charles M. DeWitt,5,1805,1808,False,create person + insert
+1957,Charles Mayrant,12,1810,1811,False,create person + insert
+1731,Charles P. Colcock,41 42,1818,1819,False,update
+1958,Charles P. Connors,43 44,1819,1820,False,create person + insert
+1708,Charles P. Elliott,37,1816,1816,False,update
+1959,Charles P. McDonald,36,1816,1816,False,create person + insert
+1960,Charles Pinckney Sullivan,68 69 71,1832,1834,False,create person + insert
+1961,Charles Porcher,46 47 49,1820,1822,False,create person + insert
+1287,Charles R. Carroll,48 49 50 51,1821,1824,False,insert
+1962,Charles R. F. Baker,64 65 67,1830,1832,False,create person + insert
+1963,Charles R. Glover,49 50,1822,1823,False,create person + insert
+1964,Charles R. Thomson,18,1810,1814,False,create person + insert
+1965,Charles S. Sims,10,1808,1808,False,create person + insert
+1966,Charles Stephens,6,1806,1808,False,create person + insert
+1967,Charles Stokes,59 60 61,1827,1829,False,create person + insert
+1968,Charles Strong,5,1805,1807,False,create person + insert
+1969,Charles T. Godbold,45 46,1820,1821,False,create person + insert
+1970,Charles Thompson,66,1831,1831,False,create person + insert
+1971,Charles W. Miller,62 64 65,1829,1831,False,create person + insert
+1972,Christopher B. Pegues,9,1806,1810,False,create person + insert
+1973,Christopher Bookter,15,1809,1813,False,create person + insert
+1974,Christopher Jones,66 67 69,1831,1833,False,create person + insert
+1975,Claudian B. Northrop,64 65,1830,1831,False,create person + insert
+1976,Coachman,59,1827,1827,False,create person + insert
+1977,Cohen Myers,47 49 50,1821,1823,False,create person + insert
+1978,Cornelius Dupont,46,1820,1820,False,create person + insert
+1979,Cornelius K. Ayer,44,1819,1819,False,create person + insert
+1781,Cornelius R. Ashley,37 39 40,1816,1818,False,update
+1980,Cotesworth P. Smith,44 45 47 48,1819,1822,False,create person + insert
+1751,Cotesworth Pinckney,42 43 44,1818,1820,False,update
+1981,Curtis Patrick,7,1805,1809,False,create person + insert
+1982,D. C. De Leon,67 69,1832,1833,False,create person + insert
+1983,D. Evander Reid,45 46,1820,1821,False,create person + insert
+1984,D. H. Dezevant,16,1811,1813,False,create person + insert
+1663,D. H. Lewis,33,1817,1817,False,update
+1560,D. J. Campbell,25,1815,1816,False,update
+1985,D. M'Kee,31,1816,1817,False,create person + insert
+1584,D. McDonald,28,1815,1817,False,update
+1986,Daniel A. Zimmerman,53 54 56,1824,1826,False,create person + insert
+1987,Daniel Depse,19,1811,1814,False,create person + insert
+1988,Daniel E. Faust,52,1824,1824,False,create person + insert
+1989,Daniel E. Huger,52 53,1824,1825,False,create person + insert
+1990,Daniel Fisher,8,1807,1807,False,create person + insert
+1991,Daniel J. Waring,18,1811,1814,False,create person + insert
+1992,Daniel Jenkins,21,1811,1812,False,create person + insert
+1993,Daniel M'Kie,33,1816,1817,False,create person + insert
+1994,Daniel McKie,40 41 43,1817,1819,False,create person + insert
+1995,Daniel S. Henderson,53 54 55,1824,1826,False,create person + insert
+1996,Daniel Tillinghast,9,1806,1810,False,create person + insert
+1997,Dannit H. Mays,61 63,1829,1830,False,create person + insert
+1998,David Cuttino,11,1808,1811,False,create person + insert
+1999,David DuBose,49 50 52 53,1822,1825,False,create person + insert
+2000,David E. Reid,44,1819,1819,False,create person + insert
+2001,David F. [surname illegible],56,1826,1826,False,create person + insert
+2002,David Files Jr.,52 53,1824,1825,False,create person + insert
+1747,David G. McKee,39 41,1817,1818,False,update
+1736,David Gaillard,32 39 41,1816,1818,False,update
+2003,David H. Means,15,1810,1813,False,create person + insert
+2004,David J. Jamieson,55 57,1825,1827,False,create person + insert
+2005,David J. McCord,18,1811,1813,False,create person + insert
+2006,David J. Rumph,58 60 61,1827,1829,False,create person + insert
+2007,David K. Gregg,56 57,1826,1827,False,create person + insert
+1697,David L. Wardlaw,24 36,1814,1816,False,update
+2008,David R. W. McIver,18,1811,1814,False,create person + insert
+2009,David S. Campbell,36,1816,1816,False,create person + insert
+2010,David William Johnson,69 71,1833,1834,False,create person + insert
+2011,Demophon Tureaud,68,1832,1832,False,create person + insert
+2012,Derrill Hart,7,1806,1807,False,create person + insert
+1741,Dixon H. Lewis,41 43 44,1818,1820,False,update
+2013,Donald C. Rowe,60 61 63,1828,1830,False,create person + insert
+2014,Donald McQueen,60 62 64 65,1828,1831,False,create person + insert
+1720,Duncan McDonald,37 38,1816,1817,False,update
+2015,E. Boudinot Brown,57 58,1826,1827,False,create person + insert
+2016,E. C. Heckeley,50,1823,1823,False,create person + insert
+1600,E. Cuthbert,29,1815,1816,False,update
+2017,E. L. Frailes,35,1817,1817,False,create person + insert
+1606,E. Phillips,29,1815,1818,False,update
+1672,E. Pinckney,33,1817,1817,False,update
+2018,E. S. Pope,32,1817,1819,False,create person + insert
+1579,E. Seabrook,27,1814,1816,False,update
+2019,E. T. Fair,69,1833,1833,False,create person + insert
+2020,E. W. McDonald,25,1815,1816,False,create person + insert
+2021,Ebenezer Cooper,47 49 50,1821,1823,False,create person + insert
+2022,Ebenezer Thayer,14,1810,1812,False,create person + insert
+2023,Edmund Bellinger,43 45 47 48 54 55,1819,1826,False,create person + insert
+2024,Edmund Burke Bacon,45 47 48,1820,1822,False,create person + insert
+2025,Edmund C. Park,21,1811,1815,False,create person + insert
+2026,Edmund Irvine,43 45 46,1819,1821,False,create person + insert
+2027,Edmund J. Felder,46 47 48,1820,1822,False,create person + insert
+2028,Edmund Randolph Jones,71,1834,1834,False,create person + insert
+1744,Edward A. Love,31 38 39 41,1816,1818,False,update
+2029,Edward Boudinot Brown,55 59,1825,1828,False,create person + insert
+2030,Edward Breed,20,1812,1814,False,create person + insert
+108,Edward Buist,58,1827,1827,False,insert
+1550,Edward C. Brevard,25 36,1814,1816,False,update
+2031,Edward C. Heckely,52,1824,1824,False,create person + insert
+2032,Edward C. Mortimer,51 52 53,1823,1825,False,create person + insert
+1612,Edward C. Palmer,32 39 42,1816,1819,False,update
+2033,Edward D. Bailey,66 67,1831,1832,False,create person + insert
+2034,Edward D. E. Jenkins,24 36,1813,1816,False,create person + insert
+2035,Edward D. Edwards,46 47 48,1820,1822,False,create person + insert
+2036,Edward G. Pelham,41,1818,1818,False,create person + insert
+2037,Edward J. Webb,56 58,1826,1827,False,create person + insert
+2038,Edward L. Goodwyn,57 58,1826,1827,False,create person + insert
+2039,Edward Lowndes,58 60,1827,1828,False,create person + insert
+2040,Edward Manigault,71,1834,1834,False,create person + insert
+2041,Edward Means,49 50 51,1822,1824,False,create person + insert
+2042,Edward P. Cosnahan,64 65 67,1830,1832,False,create person + insert
+1805,Edward Phillips,39 40,1817,1818,False,update
+2043,Edward Porcher,64 66 67,1830,1832,False,create person + insert
+1778,Edward Thomas,32 40 41 43,1817,1819,False,update
+2044,Edward Watson,6,1806,1808,False,create person + insert
+2045,Edwin D. Faust,50 53,1823,1825,False,create person + insert
+2046,Edwin Gaillard,22,1812,1815,False,create person + insert
+2047,Eldred C. Simkins,44 45 46 68,1819,1832,False,create person + insert
+1800,Eli H. Lide,37 39 40,1816,1818,False,update
+2048,Eliab C. Lightner,64 65,1830,1831,False,create person + insert
+2049,Elias D. Earle,52 54 55,1824,1826,False,create person + insert
+2050,Elias Dick,9,1807,1808,False,create person + insert
+1477,Elias Dubose,7,1806,1809,False,update
+2051,Elias F. Couturier,68 69,1832,1833,False,create person + insert
+2052,Elias Gregg,10,1808,1810,False,create person + insert
+2053,Elias H. Deas,45 46,1820,1821,False,create person + insert
+2054,Elias Horlbeck,47 48,1821,1822,False,create person + insert
+2055,Elias S. Bennet,19,1811,1811,False,create person + insert
+2056,Elihu McCulloch,66 67,1831,1832,False,create person + insert
+2057,Elijah Gibert,22,1813,1815,False,create person + insert
+2058,Elisha Hamlin,67 69,1832,1833,False,create person + insert
+2059,Elisha Young Fair,71,1834,1834,False,create person + insert
+2060,Enoch S. Evans,22,1813,1815,False,create person + insert
+2061,Ephraim M. Clarke,68 69,1832,1833,False,create person + insert
+2062,Ephraim M. Seabrook,37,1816,1816,False,create person + insert
+2063,Erasmus H. Powe,69,1833,1833,False,create person + insert
+2064,Erasmus P. Ellerbe,65 67,1831,1832,False,create person + insert
+2065,Esek Hillaney,21,1811,1815,False,create person + insert
+1819,Eugenius A. Nisbet,44,1819,1819,False,update
+2066,Eustace S. P. Bellinger,61 63,1829,1830,False,create person + insert
+2067,Evan J. Lide,46 47 48,1820,1822,False,create person + insert
+2068,Ezekiel Pickens,23,1813,1815,False,create person + insert
+1739,Ezra M. Gregg,41 42,1818,1819,False,update
+2069,F. H. Elmore,32,1817,1819,False,create person + insert
+2070,F. H. Taylor,32,1817,1819,False,create person + insert
+1609,F. H. Wardlaw,29,1816,1818,False,update
+1655,F. R. Laurens,31,1816,1817,False,update
+2071,F. W. Daniel,69,1833,1833,False,create person + insert
+2072,F. W. Glover,28,1815,1817,False,create person + insert
+2073,Felix Haile,19,1811,1811,False,create person + insert
+1752,Fitzgerald Bird,43,1819,1819,False,update
+2074,Fountain Winston,21,1812,1815,False,create person + insert
+2075,Francis B. Fishburne,55 56 57,1825,1827,False,create person + insert
+2076,Francis B. Higgins,17,1812,1813,False,create person + insert
+2077,Francis B. Johnson,52 53,1824,1825,False,create person + insert
+2078,Francis Epps,47 48,1821,1822,False,create person + insert
+2079,Francis H. Wardlaw,39 40,1817,1818,False,create person + insert
+2080,Francis M. James,43 44,1819,1820,False,create person + insert
+2081,Francis Pegre,15,1810,1813,False,create person + insert
+2082,Francis Rolando,21,1812,1813,False,create person + insert
+2083,Francis W. Fickling,58 63,1827,1830,False,create person + insert
+145,Francis W. Pickens,55 56 58,1825,1827,False,insert
+2084,Francis Weathers,13 16,1809,1813,False,create person + insert
+2085,Francis Y. Simmons,46 47 48,1820,1822,False,create person + insert
+1734,Franklin H. Elmore,41 42,1818,1819,False,update
+159,Franklin J. Moses,46 47 49 50,1820,1823,False,insert
+2086,Frederick Bother,18,1810,1814,False,create person + insert
+2087,Frederick G. Fraser,20,1812,1814,False,create person + insert
+2088,Frederick Laurens,39,1817,1817,False,create person + insert
+2089,Frederick Rutledge,38 39,1816,1817,False,create person + insert
+2090,Frederick W. Dalton,16,1810,1813,False,create person + insert
+2091,G. C. Muldrow,69,1833,1833,False,create person + insert
+2092,G. L. Massey,68 69,1832,1833,False,create person + insert
+2093,G. Memingen,32,1817,1819,False,create person + insert
+2094,G. S. Pope,51,1823,1823,False,create person + insert
+2095,Gabriel Manigault,57 58 59,1826,1828,False,create person + insert
+1576,Gavin McMillan,27 37 38,1814,1817,False,update
+1282,George Buist,49 50,1822,1823,False,insert
+168,George Butler,8,1807,1809,False,insert
+2096,George C. McBride,62 64 65,1829,1831,False,create person + insert
+2097,George C. Player,46 47 48,1820,1822,False,create person + insert
+2098,George Chisolm,19,1811,1814,False,create person + insert
+1637,George D. Blair,30 40,1817,1818,False,update
+2099,George D. Millen,22,1812,1812,False,create person + insert
+1553,George E. Ford,25 36,1814,1816,False,update
+2100,George G. Perrin,55 56 58,1825,1827,False,create person + insert
+2101,George Haig,59 60 61,1827,1829,False,create person + insert
+2102,George Hails,68 69,1832,1833,False,create person + insert
+2103,George Joor,60,1828,1828,False,create person + insert
+2104,George L. A. Davis,5 60 61,1805,1829,False,create person + insert
+2105,George L. Williamson,66 68 69,1831,1833,False,create person + insert
+2106,George M. Witherspoon,66 67,1831,1832,False,create person + insert
+176,George McDuffie,16,1811,1813,False,insert
+2107,George P. Elliott,53 55,1824,1825,False,create person + insert
+2108,George Prescott,13,1808,1812,False,create person + insert
+2109,George Ryces,13,1809,1809,False,create person + insert
+2110,George S. Smith,28,1814,1814,False,create person + insert
+2111,George Taylor,60 62 63,1828,1830,False,create person + insert
+1562,George W. Cuthbert,27 37,1814,1816,False,update
+2112,George W. Dargan,43 45 46,1819,1821,False,create person + insert
+1792,George W. Dunlap,30 39 40,1816,1818,False,update
+1450,George W. Glenn,4,1805,1807,False,update
+2113,George W. Lawton,66,1831,1831,False,create person + insert
+2114,George W. Logan,47 48,1821,1822,False,create person + insert
+984,George W. Williams,53 54 57 58 59,1824,1828,False,insert
+2115,George Withers Boon,10,1808,1810,False,create person + insert
+2116,Govan Roach,68 69,1832,1833,False,create person + insert
+2117,Gustavus Adolphus [surname illegible],71,1834,1834,False,create person + insert
+1748,Gustavus C. Meminger,41 42,1818,1819,False,update
+2118,H. B. Foutman,28,1814,1817,False,create person + insert
+1649,H. Campbell,31,1816,1817,False,update
+2119,H. Chapman,57,1826,1826,False,create person + insert
+2120,H. Holsey,29,1815,1817,False,create person + insert
+2121,H. P. Johnson,66 67,1831,1832,False,create person + insert
+2122,H. R. Miller,68 69,1832,1833,False,create person + insert
+2123,H. S. Price,31,1815,1817,False,create person + insert
+2124,Hamden Wigfall,48,1821,1821,False,create person + insert
+2125,Hampden Wigfall,49,1822,1822,False,create person + insert
+2126,Hankins,55,1825,1825,False,create person + insert
+2127,Hardy C. Conant,62 64 65 67,1829,1832,False,create person + insert
+2128,Hardy Herbert,14,1810,1810,False,create person + insert
+2129,Harris S. Evans,50,1823,1823,False,create person + insert
+2130,Hart S. H. Maxcy,53 54 55,1824,1826,False,create person + insert
+2131,Hasgill,49 50,1822,1823,False,create person + insert
+1684,Henry A. Gibbes,24 36 60 61 63,1813,1830,False,update
+2132,Henry A. Owens,68 69,1832,1833,False,create person + insert
+2133,Henry Adams,9,1807,1808,False,create person + insert
+2134,Henry B. Brickell,49 50 51,1822,1824,False,create person + insert
+2135,Henry Boylston,22,1812,1815,False,create person + insert
+1728,Henry Campbell,39 41 42,1817,1819,False,update
+2136,Henry Cantey,52,1824,1824,False,create person + insert
+1587,Henry Chiles,28 37 38,1815,1817,False,update
+2137,Henry Conner,13,1809,1812,False,create person + insert
+2138,Henry D. Roberts,37 38,1816,1817,False,create person + insert
+2139,Henry Davis,9 12,1806,1811,False,create person + insert
+1431,Henry Deas,25 36,1814,1816,False,update
+2140,Henry Foster,56 57 59,1826,1828,False,create person + insert
+2141,Henry Fullenwider,49,1822,1822,False,create person + insert
+2142,Henry G. Nixon,39 41 42,1817,1819,False,create person + insert
+2143,Henry Gray,66 67 69,1831,1833,False,create person + insert
+2144,Henry H. Clark,65 67,1831,1832,False,create person + insert
+1425,Henry H. Thompson,56 58 66 68,1826,1832,False,insert
+2145,Henry Haigler,58,1827,1827,False,create person + insert
+2146,Henry Inscoe,18,1810,1814,False,create person + insert
+2147,Henry J. Nott,18,1810,1814,False,create person + insert
+2148,Henry J. Rowe,68 69,1832,1833,False,create person + insert
+2149,Henry L. Fuller,55 56 57,1825,1827,False,create person + insert
+684,Henry L. Pinckney,14,1811,1812,False,insert
+2150,Henry L. Sims,47,1821,1821,False,create person + insert
+2151,Henry Marshall,46 47 49,1820,1822,False,create person + insert
+2152,Henry P. K. Abbott,47 49,1821,1822,False,create person + insert
+2153,Henry S. Cook,57 58,1826,1827,False,create person + insert
+2154,Henry Seibles,13,1808,1809,False,create person + insert
+2155,Henry Summer,64 65,1830,1831,False,create person + insert
+2156,Henry Taylor,5,1805,1808,False,create person + insert
+2157,Henry Vaughan,37,1816,1816,False,create person + insert
+1591,Henry Vaughn,28,1815,1816,False,update
+1796,Henry W. Grimke,29 39 40,1816,1818,False,update
+2158,Henry W. Hilliard,53 54 55,1824,1826,False,create person + insert
+2159,Henry W. Manigault,62 64 65,1829,1831,False,create person + insert
+2160,Henry W. McGowan,62 64,1829,1830,False,create person + insert
+2161,Henry W. Ravenel,20 64 66 67,1812,1832,False,create person + insert
+2162,Herndon M'Kie,33,1816,1817,False,create person + insert
+2163,Herndon McKie,40 41 43,1817,1819,False,create person + insert
+2164,Hezekiah W. Rice,52,1824,1824,False,create person + insert
+2165,Hiram B. Troutman,37 38,1816,1817,False,create person + insert
+2166,Hiram McKnight,57 58 59,1826,1828,False,create person + insert
+2167,Hopkins Holsey,37 39,1816,1817,False,create person + insert
+2168,Horace O. Hawes,50 52 53,1823,1825,False,create person + insert
+2169,Howell Waring,44,1819,1819,False,create person + insert
+1500,Hugh Alison,19,1811,1814,False,update
+1721,Hugh McMillan,37 58 59,1816,1828,False,update
+705,Hugh S. Legare,20,1812,1814,False,insert
+2170,Hunter T. Taylor,39,1817,1817,False,create person + insert
+2171,Isaac Foreman,71,1834,1834,False,create person + insert
+1765,Isaac Hadden,43 44,1819,1820,False,update
+2172,Isaac Johnson,9,1806,1809,False,create person + insert
+1707,Isaac M. Dwight,27 37 38,1814,1817,False,update
+2173,Isaac McPherson,27,1814,1816,False,create person + insert
+2174,Isaac Porcher,64 65,1830,1831,False,create person + insert
+2175,Isaac V. Smith,5 50 51,1805,1824,False,create person + insert
+2176,Isaac W. Hayne,53 55 56 57,1824,1827,False,create person + insert
+2177,Isaiah H. Mobley,55 56 57,1825,1827,False,create person + insert
+2178,Ivy Finch,6,1806,1808,False,create person + insert
+2179,J. B. Massey,68 69,1832,1833,False,create person + insert
+1631,J. B. Mays,30,1816,1818,False,update
+1665,J. C. Taylor,33 70,1817,1833,False,update
+2180,J. Capers,58,1827,1827,False,create person + insert
+2181,J. Cohen,33,1817,1817,False,create person + insert
+2182,J. Cordes Keith,57 58,1826,1827,False,create person + insert
+2183,J. English,67 69,1832,1833,False,create person + insert
+2184,J. F. Hampton,11,1808,1808,False,create person + insert
+2185,J. G. Adams,69,1833,1833,False,create person + insert
+2186,J. G. Cogdell,50,1823,1823,False,create person + insert
+1669,J. Goodwyn,33,1817,1817,False,update
+2187,J. H. Adams,69,1833,1833,False,create person + insert
+2188,J. J. Murrill,33,1817,1817,False,create person + insert
+2189,J. J. O'Bannon,55,1825,1825,False,create person + insert
+2190,J. J. Wardlaw,68 69,1832,1833,False,create person + insert
+2191,J. K. Campbell,35,1817,1817,False,create person + insert
+2192,J. Loughton S. Ramsay,51 52 53,1823,1825,False,create person + insert
+2193,J. M. Harris,32,1817,1819,False,create person + insert
+2194,J. M. Ross,32,1817,1819,False,create person + insert
+2195,J. M. Vereen,47,1821,1821,False,create person + insert
+2196,J. Madison Johnston,62 64 65,1829,1831,False,create person + insert
+2197,J. McCants,55,1825,1825,False,create person + insert
+2198,J. P. Cunningham,68 69,1832,1833,False,create person + insert
+1642,J. P. Richardson,31,1815,1816,False,update
+2199,J. S. Flemming,32,1817,1819,False,create person + insert
+2200,J. S. Gibson,66 67 69,1831,1833,False,create person + insert
+2201,J. S. Irvin,55,1825,1825,False,create person + insert
+2202,J. S. Mills,30,1816,1818,False,create person + insert
+2203,J. S. Pope,51,1823,1823,False,create person + insert
+2204,J. S. Reid,69,1833,1833,False,create person + insert
+2205,J. S. Sims,32,1817,1819,False,create person + insert
+2206,J. T. Sloan,64 65,1830,1831,False,create person + insert
+2207,J. W. Jones,68 69,1832,1833,False,create person + insert
+1452,J. Wesley Harper,4,1805,1807,False,update
+2208,J. Wilkins,33,1816,1817,False,create person + insert
+2209,Jacob Guerard,13,1809,1810,False,create person + insert
+2210,Jacob H. McMichael,45 60 61 63,1820,1830,False,create person + insert
+2211,Jacob Pearson,70 71,1833,1834,False,create person + insert
+2212,Jacob W. Strobhart,62 64 66 67,1829,1832,False,create person + insert
+1679,James A. Campbell,14 24 36,1810,1816,False,update
+2213,James A. Groves,32 42,1818,1819,False,create person + insert
+2214,James A. Strobhart,62 64 65,1829,1831,False,create person + insert
+2215,James A. Young,55 56 58,1825,1827,False,create person + insert
+2216,James Alexander Furniss,43 44,1819,1820,False,create person + insert
+2217,James Alexander Pope,42 52 53 71,1819,1834,False,create person + insert
+2218,James B. Jefferies,45 46,1820,1821,False,create person + insert
+2219,James B. Mays,39 40,1817,1818,False,create person + insert
+2220,James B. Richardson,53 55 56 58,1824,1827,False,create person + insert
+1489,James B. White,18,1811,1811,False,update
+2221,James Beckett Seabrook,71,1834,1834,False,create person + insert
+2222,James Black,61 63,1829,1830,False,create person + insert
+2223,James Bowman,8,1808,1808,False,create person + insert
+1281,James Bradley,9,1807,1810,False,insert
+2224,James C. Bonham,52 54 55 57,1824,1827,False,create person + insert
+2225,James C. Boyd,54 56,1825,1826,False,create person + insert
+1791,James C. Doby,29 37 39 40,1815,1818,False,update
+2226,James C. Nott,57 59 60 61,1826,1829,False,create person + insert
+2227,James Camak,20,1812,1814,False,create person + insert
+2228,James Chappel,7,1805,1806,False,create person + insert
+2229,James D. McWillie,49 50,1822,1823,False,create person + insert
+2230,James D. Tradewell,60 62 63,1828,1830,False,create person + insert
+2231,James D. Zimmerman,11,1808,1811,False,create person + insert
+2232,James Davis,55 56 57,1825,1827,False,create person + insert
+2233,James Dellet,9,1806,1810,False,create person + insert
+2234,James Diver,50 51,1823,1824,False,create person + insert
+2235,James Douglass,19,1811,1813,False,create person + insert
+2236,James E. Hogg,29,1815,1816,False,create person + insert
+2237,James E. Reese,50 51,1823,1824,False,create person + insert
+1644,James E. Smith,31 38 40 41 42,1815,1819,False,update
+2238,James E. Wilson,17,1812,1813,False,create person + insert
+2239,James Edings,37,1816,1816,False,create person + insert
+2240,James F. Edwards,52,1824,1824,False,create person + insert
+2241,James F. Leckie,49 50 52 53,1822,1825,False,create person + insert
+1561,James Faris,25 36,1815,1816,False,update
+2242,James Frierson,10,1807,1810,False,create person + insert
+2243,James G. Bythewood,60 61 63,1828,1830,False,create person + insert
+2244,James G. Hall,67 69,1832,1833,False,create person + insert
+1571,James G. Holmes,13 27 37 38,1809,1817,False,update
+2245,James G. T. Alston,69,1833,1833,False,create person + insert
+2246,James Gaillard,6,1806,1808,False,create person + insert
+2247,James Geddes,24 38,1813,1817,False,create person + insert
+2248,James Gillespie,15,1811,1813,False,create person + insert
+2249,James Gray,15,1809,1813,False,create person + insert
+2250,James H. Hammond,52 53,1824,1825,False,create person + insert
+219,James H. Irby,25 36,1814,1816,False,update
+2251,James H. Thornwell,64 65,1830,1831,False,create person + insert
+2252,James H. Trapier,66 68 69,1831,1833,False,create person + insert
+2253,James H. Witherspoon,43 45 64 65,1819,1831,False,create person + insert
+1262,James Haig,19,1811,1814,False,insert
+2254,James Hamilton,67 69,1832,1833,False,create person + insert
+222,James Harrison,60 62 64 65,1828,1831,False,insert
+1687,James Hibben,24 36,1813,1816,False,update
+1334,James Hopkins,15,1809,1812,False,insert
+1456,James J. Goodwin,5,1805,1808,False,update (was 1805-None)
+2255,James J. N. Potts,51,1824,1824,False,create person + insert
+2256,James Jeffries,43,1819,1819,False,create person + insert
+2257,James Johnson,22,1812,1815,False,create person + insert
+931,James Jones,48 49 50 51,1821,1824,False,insert
+2258,James L. Leslie,66 67,1831,1832,False,create person + insert
+1461,James Lowry,5,1805,1808,False,update (was 1805-None)
+2259,James M. Becket,43 45 46,1819,1821,False,create person + insert
+2260,James M. Calhoun,50 51,1823,1824,False,create person + insert
+2261,James M. Daniel,50 51 71,1823,1834,False,create person + insert
+2262,James M. Gage,64 65 67,1830,1832,False,create person + insert
+2263,James M. Neilson,64,1830,1830,False,create person + insert
+2264,James M. Nelson,62,1829,1829,False,create person + insert
+1824,James M. Sims,44 45 47 66 67,1819,1832,False,update
+2265,James Magill,48 49,1821,1822,False,create person + insert
+2266,James Martin,11,1807,1808,False,create person + insert
+2267,James Massey,14,1810,1812,False,create person + insert
+2268,James McGregor,15,1810,1811,False,create person + insert
+2269,James N. Mayrant,14,1810,1810,False,create person + insert
+2270,James Noble Baskin,69 71,1833,1834,False,create person + insert
+2271,James P. Carell,56,1826,1826,False,create person + insert
+2272,James P. Carroll,57,1827,1827,False,create person + insert
+2273,James P. Cole,45 47 48 64 65 67,1820,1832,False,create person + insert
+1564,James P. Screven,27 37 38,1814,1817,False,update
+2274,James Patterson,69 71,1833,1834,False,create person + insert
+2275,James Pettigrew,8,1807,1809,False,create person + insert
+1466,James Postell,5 7,1805,1807,False,update
+2276,James R. Aiken,67,1832,1832,False,create person + insert
+2277,James R. Aikin,64 65,1830,1831,False,create person + insert
+2278,James R. Gregg,6,1806,1806,False,create person + insert
+1767,James R. Marsh,43 44,1819,1820,False,update
+2279,James R. Tucker,53 54,1824,1825,False,create person + insert
+2280,James R. Ware,56 58,1826,1827,False,create person + insert
+2281,James Ramsay,19,1811,1813,False,create person + insert
+2282,James Raydor,38,1817,1817,False,create person + insert
+2283,James Raysor,37,1816,1816,False,create person + insert
+2284,James Rives,8,1807,1807,False,create person + insert
+2285,James Rogers,16,1811,1813,False,create person + insert
+1703,James S. Caldwell,31 37 38 39,1816,1817,False,update
+1474,James S. Dent,7,1806,1809,False,update (was 1806-None)
+2286,James S. Flemming,42,1819,1819,False,create person + insert
+2287,James S. Guignard,43 45,1819,1820,False,create person + insert
+2288,James S. Pike,41,1818,1818,False,create person + insert
+1524,James Sealy,21,1811,1812,False,update
+2289,James Simons,68 69,1832,1833,False,create person + insert
+2290,James Sims Reid,71,1834,1834,False,create person + insert
+2291,James T. Starke,56,1826,1826,False,create person + insert
+1773,James Terry,43 44,1819,1820,False,update
+2292,James Theus Taylor,15 23 60 62 63 71,1809,1834,False,create person + insert
+2293,James Thomson Baskin,71,1834,1834,False,create person + insert
+2294,James Verdier,11,1808,1811,False,create person + insert
+2295,James W. Blakeney,62 63 65,1829,1831,False,create person + insert
+1705,James W. Dinkins,7 37 38,1806,1817,False,update
+2296,James W. Hudson,47 49,1821,1822,False,create person + insert
+2297,James W. Thompson,55 56 58,1825,1827,False,create person + insert
+2298,James Walker,60 62 63,1828,1830,False,create person + insert
+2299,James Wheeler,68,1832,1832,False,create person + insert
+2300,James William Pierce,59 60 61,1827,1829,False,create person + insert
+2301,James Williamson,9,1807,1807,False,create person + insert
+2302,Jenkins,59,1827,1827,False,create person + insert
+2303,Jenkins Roper,60 61,1828,1829,False,create person + insert
+2304,Jephtha Dyson,12,1809,1811,False,create person + insert
+2305,Jeremiah Brown,45 47 48,1820,1822,False,create person + insert
+2306,Jeremiah D. Yates,46 47,1820,1821,False,create person + insert
+2307,Jeremiah Feckling,21,1811,1814,False,create person + insert
+2308,Jesse C. Patrick,50 51,1823,1824,False,create person + insert
+2309,Jesse Goodwyn,13,1809,1812,False,create person + insert
+2310,Jesse Taylor,7,1805,1807,False,create person + insert
+2311,Job Johnston,10,1809,1810,False,create person + insert
+2312,Job Legare,27,1814,1816,False,create person + insert
+2313,Joel A. Tucker,21,1812,1814,False,create person + insert
+2314,Joel R. Adams,54 56 57 69,1825,1833,False,create person + insert
+2315,John A. Edwards,19 41 52,1811,1824,False,create person + insert
+1501,John A. Keith,19,1811,1814,False,update
+2316,John A. L. Norman,41 42,1818,1819,False,create person + insert
+2317,John A. Law,58 59,1827,1828,False,create person + insert
+1718,John A. Lilly,28 37 38,1815,1817,False,update
+2318,John A. Pouncey,53 54 55,1824,1826,False,create person + insert
+2319,John A. Scott,12 21 60,1810,1828,False,create person + insert
+2320,John A. Stuart,29 37 39,1815,1817,False,create person + insert
+2321,John A. Therevan,8,1807,1807,False,create person + insert
+2322,John A. Wragg,49 51 52 54,1822,1825,False,create person + insert
+1597,John Adamson,29 37,1815,1816,False,update
+2323,John Archer Elmore,57 58 60 61,1826,1829,False,create person + insert
+2324,John Augustin Alston,59 61,1828,1829,False,create person + insert
+2325,John B. Campbell,31 39 41 42 69,1816,1833,False,create person + insert
+2326,John B. Floyd,60 61,1828,1829,False,create person + insert
+2327,John B. Gaston,14,1810,1810,False,create person + insert
+1573,John B. Laurens,27 37 38,1814,1817,False,update
+2328,John B. Morton,68 69,1832,1833,False,create person + insert
+2329,John B. Muldrow,6 9,1805,1810,False,create person + insert
+2330,John B. O'Neal,13,1811,1812,False,create person + insert
+2331,John B. Witherspoon,43 44,1819,1820,False,create person + insert
+2332,John Bell,11 18,1807,1811,False,create person + insert
+2333,John Black,53,1824,1824,False,create person + insert
+2334,John Boatwright,71,1834,1834,False,create person + insert
+1504,John Boykin,9 20 68,1807,1832,False,update
+2335,John Boykin## 71 L 1833 Junior,69,1833,1833,False,create person + insert
+2336,John Boyle,66,1831,1831,False,create person + insert
+2337,John Brown,12,1810,1811,False,create person + insert
+2338,John Buchanan,12,1809,1811,False,create person + insert
+2339,John Bull Gill,6 21,1806,1815,False,create person + insert
+2340,John Burges,17,1811,1811,False,create person + insert
+2341,John Burgess,13,1808,1809,False,create person + insert
+2342,John C. Akin,45,1820,1820,False,create person + insert
+1592,John C. Carter,12 28 37 38,1808,1817,False,update
+2343,John C. Faber,58 59,1827,1828,False,create person + insert
+2344,John C. Kilpatrick,62 64 65,1829,1831,False,create person + insert
+2345,John C. Martin,53,1824,1824,False,create person + insert
+2346,John C. McGehee,45 46,1820,1821,False,create person + insert
+2347,John C. Robeson,68 69,1832,1833,False,create person + insert
+2348,John C. Rowe,59 60 61,1827,1829,False,create person + insert
+1772,John C. Taylor,41 43 44,1818,1820,False,update
+2349,John Calder Whaley,71,1834,1834,False,create person + insert
+1787,John Chapman,30 39,1816,1817,False,update
+2350,John Creighton McMaster,71,1834,1834,False,create person + insert
+2351,John D. Cantzon,49,1822,1822,False,create person + insert
+2352,John D. Coalter,49 52 53,1822,1825,False,create person + insert
+2353,John D. Murphy,6 8,1807,1808,False,create person + insert
+2354,John D. Nance,45 46,1820,1821,False,create person + insert
+2355,John D. Strother,60 62 63,1828,1830,False,create person + insert
+2356,John Dent,8,1807,1807,False,create person + insert
+1602,John Doby,29 39 40,1815,1818,False,update
+2357,John Douglas,61 63,1829,1830,False,create person + insert
+2358,John E. Carew,51,1823,1823,False,create person + insert
+2359,John E. Irby,43,1819,1819,False,create person + insert
+2360,John E. McIver,5 6,1805,1807,False,create person + insert
+2361,John Egan Chesley,7,1805,1806,False,create person + insert
+1676,John F. Blake,24 36,1814,1816,False,update
+2362,John F. Ervin,56 57,1826,1827,False,create person + insert
+2363,John F. O'Bannon,56 57,1826,1827,False,create person + insert
+2364,John Farley,23,1813,1815,False,create person + insert
+2365,John Farnandis,37 38,1816,1817,False,create person + insert
+2366,John Fathey,11,1809,1811,False,create person + insert
+1659,John Frost,33 40 41 43 45 46,1816,1821,False,update
+2367,John G. Creagh,16,1811,1813,False,create person + insert
+2368,John G. Schwartz,54 56,1825,1826,False,create person + insert
+2369,John Gaillard,20 66,1812,1831,False,create person + insert
+2370,John Gayle,14,1810,1812,False,create person + insert
+1712,John Geddes,27 37,1814,1816,False,update
+2371,John Gibbes Boone,59 61,1828,1829,False,create person + insert
+2372,John Gist,50 52 53,1823,1825,False,create person + insert
+2373,John Gough,58 59,1827,1828,False,create person + insert
+2374,John H. Cartidge,20,1812,1814,False,create person + insert
+2375,John H. Means,41 64 66 67,1818,1832,False,create person + insert
+2376,John H. Pegues,22,1811,1815,False,create person + insert
+2377,John Herbert,30 39,1816,1817,False,create person + insert
+2378,John Hopkins Adams,71,1834,1834,False,create person + insert
+1715,John Hunter,18 28 37 38,1810,1817,False,update
+2379,John J. Creswell,12,1809,1809,False,create person + insert
+1457,John J. Goodwin,5,1805,1808,False,update (was 1805-None)
+2380,John J. Landrum,56 57,1826,1827,False,create person + insert
+2381,John J. Marshall,53 54 55,1824,1826,False,create person + insert
+2382,John J. Mauger,24 36,1814,1816,False,create person + insert
+2383,John J. Schnierle,53 55 56 58,1824,1827,False,create person + insert
+2384,John J. Vicarson,20,1812,1812,False,create person + insert
+2385,John J. Woodward,57 59,1826,1828,False,create person + insert
+2386,John Jacob Myers,45 46,1820,1821,False,create person + insert
+286,John Jones,27 37,1813,1816,False,update
+1815,John K. Campbell,42 43 45 46,1818,1821,False,update
+2387,John K. Gibson,43 45 46,1819,1821,False,create person + insert
+2388,John Kinsler,52 53,1824,1825,False,create person + insert
+2389,John L. Finley,22,1812,1814,False,create person + insert
+2390,John L. Gervais,64 65 67,1830,1832,False,create person + insert
+2391,John L. Kennedy,52 53,1824,1825,False,create person + insert
+2392,John L. McCollough,21,1812,1815,False,create person + insert
+1627,John Laborde,30 39 40,1816,1818,False,update
+1574,John Legare,27,1814,1816,False,update
+1479,John Lide,7 22,1807,1814,False,update
+2393,John Lofton,55 56 57,1825,1827,False,create person + insert
+2394,John M. Blocker,50 51,1823,1824,False,create person + insert
+2395,John M. Cain,11,1808,1811,False,create person + insert
+2396,John M. Call,14,1809,1812,False,create person + insert
+2397,John M. D. Cheney,62 64,1829,1830,False,create person + insert
+2398,John M. De Saussure,49 50 52 53,1822,1825,False,create person + insert
+1733,John M. Deas,39 41 42 68 69 71,1817,1834,False,update
+2399,John M. Flud,37,1816,1816,False,create person + insert
+1710,John M. Fludd,27,1814,1816,False,update
+2400,John M. Harris,41 42,1818,1819,False,create person + insert
+2401,John M. Hayne,54,1825,1825,False,create person + insert
+2402,John M. Huger,55,1826,1826,False,create person + insert
+2403,John M. Kirk,62 64 65,1829,1831,False,create person + insert
+2404,John M. Lee,17,1811,1813,False,create person + insert
+2405,John M. Lowry,68,1832,1832,False,create person + insert
+2406,John M. Pierce,66 68 69,1831,1833,False,create person + insert
+2407,John M. Rogers,45 46 71,1820,1834,False,create person + insert
+2408,John M. Ross,41 42,1818,1819,False,create person + insert
+1575,John Mayrant,5 27 37 38,1805,1817,False,update
+2409,John McComb,20,1812,1814,False,create person + insert
+2410,John McCord,11,1809,1810,False,create person + insert
+2411,John McCreary,58 59,1827,1828,False,create person + insert
+2412,John McLeod,17,1812,1813,False,create person + insert
+2413,John McRae,9,1807,1808,False,create person + insert
+959,John Middleton,29 37,1814,1816,False,update
+1577,John Miller,27 37 38,1814,1817,False,update
+2414,John N. [surname illegible],56 62,1826,1829,False,create person + insert
+2415,John N. Herndon,57,1827,1827,False,create person + insert
+2416,John N. Williams,24 36,1813,1816,False,create person + insert
+2417,John Newcomb,11,1808,1809,False,create person + insert
+2418,John Nixon,49,1822,1822,False,create person + insert
+2419,John P. Chambers,45,1820,1820,False,create person + insert
+2420,John P. Creyon,51 52 54 55,1823,1826,False,create person + insert
+2421,John P. J. Pringle,55 56,1825,1826,False,create person + insert
+1798,John P. James,30 32 33 39 40,1817,1818,False,update
+2422,John P. Jarmon,60 61 63,1828,1830,False,create person + insert
+2423,John P. Moore,25,1814,1815,False,create person + insert
+1749,John P. Murrell,41,1818,1818,False,update
+2424,John P. Richardson,38 39 41 42 49,1816,1822,False,create person + insert
+1532,John P. Thomas,24 36,1813,1816,False,update
+1827,John P. Zimmerman,44 45 47,1819,1821,False,update
+1384,John Phillips,44 45 46,1819,1821,False,update
+2425,John Pope,13,1808,1809,False,create person + insert
+2426,John Porter,21,1811,1814,False,create person + insert
+845,John Postell,9,1807,1808,False,insert
+2427,John Pressly,45 46,1820,1821,False,create person + insert
+299,John Preston,61 63,1829,1830,False,insert
+2428,John Pyatt,9,1807,1810,False,create person + insert
+2429,John R. Charles,51 54 55,1824,1826,False,create person + insert
+2430,John R. Davis,5 47 49 50 57,1805,1826,False,create person + insert
+2431,John R. Golding,10,1808,1810,False,create person + insert
+2432,John R. McMillan,11,1808,1811,False,create person + insert
+2433,John R. Wilson,17 43 44,1812,1820,False,create person + insert
+2434,John Reid,14,1811,1812,False,create person + insert
+2435,John Reighton,16,1811,1811,False,create person + insert
+1667,John S. Bobo,33 41 43,1817,1819,False,update
+2436,John S. Caldwell,4 28,1805,1817,False,create person + insert
+2437,John S. Groves,32 42,1818,1819,False,create person + insert
+2438,John S. Mills,39 40 61 63,1817,1830,False,create person + insert
+2439,John S. Murrill,43 44,1819,1820,False,create person + insert
+2440,John S. Palmer,44 46 47 48,1819,1822,False,create person + insert
+2441,John S. Potts,49 50,1822,1823,False,create person + insert
+2442,John Samuel Marion,71,1834,1834,False,create person + insert
+1478,John Shaw,7,1806,1809,False,update
+2443,John Starke,8,1807,1807,False,create person + insert
+2444,John Sumter,71,1834,1834,False,create person + insert
+2445,John T. Brevard,11,1809,1811,False,create person + insert
+2446,John T. Chappell,67 69,1832,1833,False,create person + insert
+2447,John Thompson,13,1809,1812,False,create person + insert
+1581,John Townsend,28 37,1814,1816,False,update
+2448,John W. Bacon,43 45 46,1819,1821,False,create person + insert
+2449,John W. Baker,47 49,1821,1822,False,create person + insert
+2450,John W. Bird,25 36,1814,1816,False,create person + insert
+2451,John W. Geiger,50 51,1823,1824,False,create person + insert
+2452,John W. Paul,45 46,1820,1821,False,create person + insert
+2453,John W. Rice,68 69,1832,1833,False,create person + insert
+1557,John W. Simpson,25,1814,1814,False,update
+2454,John Wallace,68 70 71,1832,1834,False,create person + insert
+2455,John Waring,13,1808,1812,False,create person + insert
+2456,John Waties,9,1806,1810,False,create person + insert
+307,John Watson,66 68 69,1831,1833,False,insert
+2457,John Whitaker,20,1811,1814,False,create person + insert
+1253,Jonathan Maxcy,40 42 43 44,1817,1820,False,update
+2458,Jonathan T. Waters,59 60,1827,1828,False,create person + insert
+2459,Jos. M. Lesesne,66 67,1831,1832,False,create person + insert
+2460,Joseph A. Black,57 58 59,1826,1828,False,create person + insert
+2461,Joseph A. Woodward,56 58,1826,1827,False,create person + insert
+2462,Joseph Capers,57,1826,1826,False,create person + insert
+2463,Joseph D. Maybank,30 39,1816,1817,False,create person + insert
+2464,Joseph E. Glover,60 61,1828,1829,False,create person + insert
+2465,Joseph Fickling,15,1809,1813,False,create person + insert
+2466,Joseph Fraser,40,1818,1818,False,create person + insert
+2467,Joseph Frazer,39,1817,1817,False,create person + insert
+1572,Joseph Jenkins,27 37,1814,1816,False,update
+2468,Joseph K. Alston,21 56,1811,1826,False,create person + insert
+2469,Joseph Lee,47 48,1821,1822,False,create person + insert
+1462,Joseph Lowry,5,1805,1808,False,update (was 1805-None)
+2470,Joseph Lyons,64 66 67,1830,1832,False,create person + insert
+2471,Joseph McCants,53,1824,1824,False,create person + insert
+2472,Joseph N. Bevan,24 36,1814,1816,False,create person + insert
+2473,Joseph N. Chapman,58 59,1827,1828,False,create person + insert
+315,Joseph N. Whitner,29 39 41,1816,1818,False,insert
+2474,Joseph P. Woodward,58,1827,1827,False,create person + insert
+2475,Joseph Pope,16,1810,1813,False,create person + insert
+2476,Joseph Pou,45 46,1820,1821,False,create person + insert
+2477,Joseph Pyatt,9,1807,1810,False,create person + insert
+2478,Joseph S. Bossard,21,1812,1814,False,create person + insert
+2479,Joseph S. Sims,41 42,1818,1819,False,create person + insert
+2480,Joseph W. Franklin,10,1808,1810,False,create person + insert
+2481,Joseph W. W. Cook,45,1820,1820,False,create person + insert
+2482,Joshua Ward,19,1811,1814,False,create person + insert
+2483,Josiah C. Nott,49 50 51,1822,1824,False,create person + insert
+2484,Josiah Evans,5,1805,1808,False,create person + insert
+2485,Josiah J. Kilpatrick,30 40,1816,1818,False,create person + insert
+1343,Josiah Kilgore,16,1811,1813,False,insert
+2486,Josiah Patterson,66 68 69,1831,1833,False,create person + insert
+2487,Julius E. Poellnitz,61 63,1829,1830,False,create person + insert
+2488,Julius J. DuBose,61 63,1829,1830,False,create person + insert
+2489,Kenner,43,1819,1819,False,create person + insert
+2490,L. Cuthbert,29,1815,1818,False,create person + insert
+2491,Langdon Cheves,66 67 69,1831,1833,False,create person + insert
+2492,Laurent D. Hallonquist,67 69,1832,1833,False,create person + insert
+2493,Lawson Clinton,45 46,1820,1821,False,create person + insert
+2494,Lem. Boykin,29,1815,1817,False,create person + insert
+2495,Lemuel Boozer,61 63,1829,1830,False,create person + insert
+2496,Lemuel M. Boykin,37 39 41,1816,1818,False,create person + insert
+2497,Leontine Butler,45 47,1820,1821,False,create person + insert
+2498,Levin,59,1827,1827,False,create person + insert
+2499,Levy,55,1825,1825,False,create person + insert
+1688,Lewis B. Holloway,25 36,1814,1816,False,update
+2500,Lewis J. Patterson,60 61 63,1828,1830,False,create person + insert
+2501,Lewis M. De Saussure,52 53,1824,1825,False,create person + insert
+2502,Lewis R. Gibbes,60 61,1828,1829,False,create person + insert
+2503,Lewis R. Sams,61,1829,1829,False,create person + insert
+2504,Lewis R. Sims,60,1828,1828,False,create person + insert
+2505,Louis A. Raoul,68,1832,1832,False,create person + insert
+1789,Lucius Cuthbert,37 39 40,1816,1818,False,update
+2506,Ludoricus W. Harris,44,1819,1819,False,create person + insert
+2507,Ludovicus W. Harris,45 46,1820,1821,False,create person + insert
+2508,Lydall P. Saxon,49 51 52 54,1822,1825,False,create person + insert
+2509,Lynch H. Deas,50 51,1823,1824,False,create person + insert
+1614,M. A. Cooper,32,1817,1819,False,update
+2510,M. H. Lance,23,1813,1815,False,create person + insert
+2511,M. L. Bonham,69,1833,1833,False,create person + insert
+2512,Madison F. Perry,66,1831,1831,False,create person + insert
+2513,Malachi H. Waring,46,1820,1820,False,create person + insert
+2514,Malden,59,1827,1827,False,create person + insert
+2515,Marcy Gregg,71,1834,1834,False,create person + insert
+1732,Mark A. Cooper,41 42,1818,1819,False,update
+2516,Martin George Gunnels,71,1834,1834,False,create person + insert
+2517,Martin K. Dudley,59 60 61 63,1827,1830,False,create person + insert
+2518,Martin Phillips,53 55 56,1824,1826,False,create person + insert
+2519,Matthew Fleming,15,1810,1813,False,create person + insert
+2520,Matthew Williams,43 44,1819,1820,False,create person + insert
+2521,Matthias Holland [surname partly hidden],71,1834,1834,False,create person + insert
+2522,Maximilian Laborde,45 46,1820,1821,False,create person + insert
+2523,Maynard D. Richardson,61 63,1829,1830,False,create person + insert
+2524,Mazyck,59,1827,1827,False,create person + insert
+2525,McCaw,59,1827,1827,False,create person + insert
+2526,McMahan,59,1827,1827,False,create person + insert
+2527,McMillan C. King,60 61,1828,1829,False,create person + insert
+2528,Melvin Melius Sams,70 71,1833,1834,False,create person + insert
+2529,Merrick E. Carr,63 65,1830,1831,False,create person + insert
+2530,Michael C. Spann,59 60 62 63,1827,1830,False,create person + insert
+1484,Michael O'Brien,18,1810,1814,False,update
+2531,Michael W. Cheesman,45,1820,1820,False,create person + insert
+2532,Michael W. Chrestman,47 48,1821,1822,False,create person + insert
+2533,Mijamin S. McWhorter,45 46,1820,1821,False,create person + insert
+2534,Miles B. Sams,60 61 63,1828,1830,False,create person + insert
+2535,Milledge Luke Bonham,71,1834,1834,False,create person + insert
+2536,Milton Mellet,22,1813,1814,False,create person + insert
+2537,Mitchel R. Cook,36,1816,1816,False,create person + insert
+1551,Mitchell Cook,25,1814,1816,False,update
+2538,Myer M. Cohen,47 49,1821,1822,False,create person + insert
+2539,N. B. Screven,32,1816,1819,False,create person + insert
+1628,N. Hodges,30,1816,1817,False,update
+2540,N. P. Toney,62 64 65,1829,1831,False,create person + insert
+2541,N. R. Eaves,23,1813,1815,False,create person + insert
+2542,Napoleon B. Screven,39 41 42,1817,1819,False,create person + insert
+2543,Napoleon G. Rich,68 69,1832,1833,False,create person + insert
+2544,Nathan P. Cook,43 45,1819,1820,False,create person + insert
+2545,Nathan Wade,13,1808,1810,False,create person + insert
+2546,Nathaniel A. Ware,6,1805,1808,False,create person + insert
+2547,Nathaniel Fuller,20,1812,1813,False,create person + insert
+944,Nelson Mitchell,66 67,1831,1832,False,insert
+2548,Nicholas A. Peay,64,1830,1830,False,create person + insert
+1797,Nicholas Hodges,39 40,1817,1818,False,update
+2549,Nicholas Summer,58 59,1827,1828,False,create person + insert
+2550,Nimrod Benson,13,1809,1812,False,create person + insert
+1593,O. Middleton,29,1814,1817,False,update
+2551,Oliver Wheeler,47,1821,1821,False,create person + insert
+2552,Orlando Rees,22,1812,1815,False,create person + insert
+2553,Osman Woodward,59,1827,1827,False,create person + insert
+2554,Owen P. McCarthy,66 68 69,1831,1833,False,create person + insert
+2555,P. H. De Graffenreid,57 58,1826,1827,False,create person + insert
+2556,P. W. Folker,24,1813,1816,False,create person + insert
+2557,P. Williamson,29,1815,1818,False,create person + insert
+2558,Pabez R. Wescoat,62 64 65,1829,1831,False,create person + insert
+2559,Patillo Farrow,23,1813,1815,False,create person + insert
+2560,Patrick C. Caldwell,43 44,1819,1820,False,create person + insert
+1682,Patrick H. Folker,36,1816,1816,False,update
+2561,Paul Bell,22,1812,1815,False,create person + insert
+2562,Paul H. Wilkins,35 42 44 45 47,1817,1821,False,create person + insert
+2563,Paul T. Keith,41 43 44,1818,1820,False,create person + insert
+2564,Peter Cordes Gaillard,63 65 68 69 71,1830,1834,False,create person + insert
+2565,Peter Cordes Porcher,66 67,1831,1832,False,create person + insert
+2566,Peter F. Laborde,53,1824,1824,False,create person + insert
+2567,Peter Gourdin,66 67 69,1831,1833,False,create person + insert
+2568,Peter Henry Joor,60 61,1828,1829,False,create person + insert
+2569,Peter J. Nephew,10,1808,1808,False,create person + insert
+2570,Peter Perry,10,1808,1809,False,create person + insert
+2571,Peter S. Bacot,64,1830,1830,False,create person + insert
+2572,Peter S. Couturier,65 67,1831,1832,False,create person + insert
+1320,Peter W. Fraser,44 46 47 48,1819,1822,False,insert
+2573,Ph. Porcher,22,1812,1813,False,create person + insert
+2574,Philemon Waters,24,1813,1814,False,create person + insert
+2575,Philip E. Kirk,66 67,1831,1832,False,create person + insert
+2576,Philip Hirons,13,1808,1810,False,create person + insert
+1516,Philip Porcher,20,1812,1814,False,update
+2577,Powell McRea,5,1805,1808,False,create person + insert
+2578,Priestley Cooper,65 67,1831,1832,False,create person + insert
+2579,Q. D. Witherspoon,49,1822,1822,False,create person + insert
+2580,R. A. Brevard,33,1817,1817,False,create person + insert
+2581,R. G. Quarles,54 55,1825,1826,False,create person + insert
+2582,R. H. Wardlaw,55,1825,1825,False,create person + insert
+2583,R. L. Armstrong,23,1813,1815,False,create person + insert
+1570,R. L. Greene,27,1814,1817,False,update
+2584,R. L. Youngblood,33,1817,1817,False,create person + insert
+1638,R. P. Creagh,30,1817,1818,False,update
+2585,Ramsay Mayson,20,1812,1814,False,create person + insert
+2586,Randall Johnston,57 59,1826,1828,False,create person + insert
+2587,Randell Croft,59 60 61,1827,1829,False,create person + insert
+2588,Randell Hunt,52 53,1824,1825,False,create person + insert
+2589,Randell Johnston,58,1827,1827,False,create person + insert
+2590,Reese Price,56 58,1826,1827,False,create person + insert
+1726,Reuben C. Worthington,30 39 41,1816,1818,False,update
+2591,Reuben Means,15,1810,1813,False,create person + insert
+2592,Reuben Ruff,57 58,1826,1827,False,create person + insert
+2593,Reuben Wilson,15,1810,1812,False,create person + insert
+2594,Rhydon G. Hill,43,1819,1819,False,create person + insert
+2595,Richard A. Gant,18,1811,1811,False,create person + insert
+2596,Richard A. Gantt,27 37 38,1814,1817,False,create person + insert
+2597,Richard B. McMical,56 57,1826,1827,False,create person + insert
+2598,Richard D. Smith,27 37,1814,1816,False,create person + insert
+376,Richard F. Simpson,25 36,1814,1816,False,insert
+2599,Richard H. Manning,12,1810,1811,False,create person + insert
+2600,Richard Haile,18,1811,1811,False,create person + insert
+2601,Richard Hutson,7,1806,1809,False,create person + insert
+2602,Richard L. Simms,37,1816,1816,False,create person + insert
+2603,Richard P. Creagh,25 40,1814,1818,False,create person + insert
+2604,Richard Proctor,70,1833,1833,False,create person + insert
+2605,Richard S. Bedon,61 63,1829,1830,False,create person + insert
+2606,Richard S. Gladney,63 65,1830,1831,False,create person + insert
+2607,Richard S. Pearson,60,1828,1828,False,create person + insert
+1814,Richard S. Youngblood,42 43,1818,1819,False,update
+2608,Richard T. Brumby,50 51,1823,1824,False,create person + insert
+2609,Richard Toolman,13,1809,1812,False,create person + insert
+1513,Richard White,20,1812,1814,False,update
+2610,Richard Yeadon,43 45,1819,1820,False,create person + insert
+2611,Robert A. Brevard,41 43 44,1818,1820,False,create person + insert
+2612,Robert A. Maxwell,20,1812,1814,False,create person + insert
+2613,Robert A. Speers,59,1828,1828,False,create person + insert
+2614,Robert A. Taylor,11,1808,1811,False,create person + insert
+2615,Robert Adams,9 14,1807,1812,False,create person + insert
+2616,Robert Anderson,17 63 65,1812,1831,False,create person + insert
+2617,Robert B. Gilchrist,20,1812,1814,False,create person + insert
+2618,Robert B. Nance,16,1811,1813,False,create person + insert
+2619,Robert Barkley,16,1811,1812,False,create person + insert
+2620,Robert Beathcot,11,1808,1810,False,create person + insert
+2621,Robert Bradley,17 54 55,1812,1826,False,create person + insert
+2622,Robert Chisolm,19,1811,1814,False,create person + insert
+2623,Robert Elfe,29 37 39 40,1815,1818,False,create person + insert
+2624,Robert F. Charles,56 57,1826,1827,False,create person + insert
+2625,Robert Failes,23,1813,1814,False,create person + insert
+2626,Robert Fishburne,55 56 57,1825,1827,False,create person + insert
+2627,Robert Giles,16,1811,1811,False,create person + insert
+2628,Robert Gill,8,1807,1809,False,create person + insert
+2629,Robert H. Cresswell,58,1827,1827,False,create person + insert
+1706,Robert H. Dunlap,25 37 38,1814,1817,False,update
+2630,Robert H. Goodwyn,14,1810,1812,False,create person + insert
+2631,Robert H. Gregg,10,1807,1810,False,create person + insert
+2632,Robert H. Spears,58,1827,1827,False,create person + insert
+2633,Robert H. Spencer,49 50,1822,1823,False,create person + insert
+2634,Robert H. Wardlaw,56,1826,1826,False,create person + insert
+2635,Robert Hagood,31 38,1815,1816,False,create person + insert
+2636,Robert Hails,18,1810,1810,False,create person + insert
+2637,Robert Holmes,50 53 55,1823,1825,False,create person + insert
+2638,Robert J. Gage,63 65,1830,1831,False,create person + insert
+2639,Robert Kilpatrick,68 69,1832,1833,False,create person + insert
+2640,Robert L. Burns,66 67 69,1831,1833,False,create person + insert
+2641,Robert L. Campbell,7 69,1806,1833,False,create person + insert
+1713,Robert L. Green,38,1817,1817,False,update
+2642,Robert L. Greene,37,1816,1816,False,create person + insert
+2643,Robert L. Heriott,69,1833,1833,False,create person + insert
+2644,Robert Laroche Heriot,71,1834,1834,False,create person + insert
+2645,Robert Lowry,12,1809,1810,False,create person + insert
+2646,Robert M. Cherry,61 63,1829,1830,False,create person + insert
+2647,Robert M. Wilson,17,1812,1813,False,create person + insert
+2648,Robert Mark,16,1810,1811,False,create person + insert
+2649,Robert Means,56 57,1826,1827,False,create person + insert
+2650,Robert Miles,55 56 57,1825,1827,False,create person + insert
+2651,Robert Munford,52 53,1824,1825,False,create person + insert
+2652,Robert N. Gourdin,63 65,1830,1831,False,create person + insert
+2653,Robert P. Brownfield,45 46,1820,1821,False,create person + insert
+1801,Robert P. Lide,39 40,1817,1818,False,update
+2654,Robert Reid,5,1805,1807,False,create person + insert
+2655,Robert Rogers,59 60 61,1827,1829,False,create person + insert
+2656,Robert Saxon,55,1825,1825,False,create person + insert
+2657,Robert Stark,13,1808,1812,False,create person + insert
+2658,Robert T. Allison,45 46,1820,1821,False,create person + insert
+2659,Robert W. Gibbes,56 57,1826,1827,False,create person + insert
+2660,Robert W. James,16 49 50 52 53,1811,1825,False,create person + insert
+2661,Roger M. Wilson,17,1812,1813,False,create person + insert
+2662,Rufus A. Nott,62 64 66 67,1829,1832,False,create person + insert
+1467,Rufus Mayrant,7,1805,1807,False,update (was 1805-None)
+2663,Russell McCord,13,1808,1812,False,create person + insert
+1624,S. Bailey,30,1816,1818,False,update
+2664,S. Etting Myers,52 53,1824,1825,False,create person + insert
+2665,S. Gaillard,33,1816,1818,False,create person + insert
+2666,S. Glover,69,1833,1833,False,create person + insert
+2667,S. Green,31,1816,1817,False,create person + insert
+2668,S. J. Hoey,32,1817,1819,False,create person + insert
+2669,S. P. Simpson,29,1815,1817,False,create person + insert
+2670,S. Pinckney Huger,69,1833,1833,False,create person + insert
+2671,S. Taylor,30,1816,1818,False,create person + insert
+2672,Sampson J. Boatwright,64,1830,1830,False,create person + insert
+1782,Samuel A. Bailey,39 40,1817,1818,False,update
+2673,Samuel B. Cantey,9,1807,1807,False,create person + insert
+2674,Samuel B. Lewars,11,1807,1811,False,create person + insert
+1719,Samuel B. Marsh,37 38,1816,1817,False,update
+2675,Samuel B. Wilkins,40 42 43 44,1817,1820,False,create person + insert
+1505,Samuel Boykin,20,1811,1814,False,update
+2676,Samuel Buckley,15,1810,1813,False,create person + insert
+2677,Samuel Chisolm,33,1816,1817,False,create person + insert
+2678,Samuel D. Williams,42 43 44,1818,1820,False,create person + insert
+2679,Samuel Donnelly,65 67,1831,1832,False,create person + insert
+2680,Samuel Emanuel,60 62 63 65,1828,1831,False,create person + insert
+1793,Samuel F. Dunlap,30 39 40,1816,1818,False,update
+2681,Samuel F. Rice,68 69,1832,1833,False,create person + insert
+1674,Samuel G. Barker,24 36,1813,1816,False,update
+2682,Samuel G. Gourdin,24 36,1813,1816,False,create person + insert
+1780,Samuel Gaillard,40 41,1817,1818,False,update
+2683,Samuel J. Ervine,65 67,1831,1832,False,create person + insert
+2684,Samuel J. Palmer,53 54 55,1824,1826,False,create person + insert
+2685,Samuel James Alston,71,1834,1834,False,create person + insert
+2686,Samuel L. Murray,10 20,1807,1814,False,create person + insert
+1774,Samuel L. Watson,43 44,1819,1820,False,update
+2687,Samuel M. Gibbes,63 65,1830,1831,False,create person + insert
+1738,Samuel M. Green,39 41 42,1817,1819,False,update
+2688,Samuel M. Stafford,30 40,1817,1818,False,create person + insert
+2689,Samuel Marcy Earle,10 69 71,1808,1834,False,create person + insert
+2690,Samuel Marion,69,1833,1833,False,create person + insert
+2691,Samuel McAliley,54,1825,1825,False,create person + insert
+2692,Samuel McClanahan,55 56 57,1825,1827,False,create person + insert
+2693,Samuel McDowell,61 63,1829,1830,False,create person + insert
+2694,Samuel McWhittin,13,1808,1812,False,create person + insert
+1810,Samuel P. Simpson,37 39 41 42,1816,1819,False,update
+2695,Samuel R. Black,62 63 65,1829,1831,False,create person + insert
+2696,Samuel R. Gibson,20 64,1812,1830,False,create person + insert
+1740,Samuel S. Hoey,41 42,1818,1819,False,update
+2697,Samuel W. Leslie,52 53,1824,1825,False,create person + insert
+2698,Samuel W. Mays,53 54 55,1824,1826,False,create person + insert
+2699,Samuel W. Trotti,64,1830,1830,False,create person + insert
+1724,Samuel Williamson,30 41,1817,1818,False,update
+2700,Samuel Y. Stith,64 66,1830,1831,False,create person + insert
+2701,Sanders Lestarjette Glover,71,1834,1834,False,create person + insert
+2702,Shenee Bobo,33,1817,1817,False,create person + insert
+2703,Sherod H. Kennerly,50 52 53,1823,1825,False,create person + insert
+2704,Sidney Flemming,41,1818,1818,False,create person + insert
+2705,Silas L. Heller,53 54 55,1824,1826,False,create person + insert
+2706,Simon P. Gray,12,1809,1811,False,create person + insert
+1683,Simpson Foster,25 36,1814,1816,False,update
+2707,Solomon Cohen,41 43 44,1818,1820,False,create person + insert
+2708,Solomon Etting Myers,51,1823,1823,False,create person + insert
+2709,Solomon L. Pope,60 61,1828,1829,False,create person + insert
+1717,Solomon Legare,37,1816,1816,False,update
+1754,Spencer Allen Bobo,41 43 44,1818,1820,False,update
+2710,Spencer S. McMorris,28 37 39 40,1815,1818,False,create person + insert
+415,Stephen Elliott,52 53,1824,1825,False,insert
+2711,Stephen Ford,5,1805,1807,False,create person + insert
+2712,Stephen H. Maxcy,39,1817,1817,False,create person + insert
+2713,Stephen Miller,6,1806,1808,False,create person + insert
+2714,Stephen Richard Proctor,71,1834,1834,False,create person + insert
+2715,Stobo Bedon,20,1812,1814,False,create person + insert
+2716,Sumter Taylor,40,1818,1818,False,create person + insert
+2717,Symes Bonneau,19,1811,1814,False,create person + insert
+2718,T. B. Tompkins,54 56,1825,1826,False,create person + insert
+2719,T. H. Colcock,22,1813,1814,False,create person + insert
+1618,T. J. Means,32,1817,1819,False,update
+2720,T. J. Roach,30,1816,1817,False,create person + insert
+2721,T. L. Barnett,67 69,1832,1833,False,create person + insert
+2722,T. Y. Simons,22,1812,1815,False,create person + insert
+1538,Theo. Gourdin,24,1813,1816,False,update
+2723,Theodore G. Hunt,49 50,1822,1823,False,create person + insert
+2724,Theodore Gaillard,22,1812,1815,False,create person + insert
+1686,Theodore Gourdin,36,1816,1816,False,update
+2725,Theodore Stark,52,1824,1824,False,create person + insert
+2726,Theodore Starke,54,1825,1825,False,create person + insert
+2727,Theodore W. Brevard,50 51,1823,1824,False,create person + insert
+2728,Thomas B. Lee,50 51,1823,1824,False,create person + insert
+2729,Thomas B. Spratt,56 58,1826,1827,False,create person + insert
+2730,Thomas B. Woodward,53 54 56,1824,1826,False,create person + insert
+1783,Thomas Bailey,29 37 39 40,1815,1818,False,update
+2731,Thomas Baker Haynesworth,71,1834,1834,False,create person + insert
+1786,Thomas Boykin,29 37 39,1815,1817,False,update
+2732,Thomas Broughton,22,1813,1814,False,create person + insert
+2733,Thomas C. Cannon,63 65,1830,1831,False,create person + insert
+2734,Thomas C. Dupont,7 64 65 67,1806,1832,False,create person + insert
+2735,Thomas C. Perrin,53 54 55,1824,1826,False,create person + insert
+2736,Thomas Cahusac,14,1810,1812,False,create person + insert
+2737,Thomas Center,61 63,1829,1830,False,create person + insert
+2738,Thomas Clarkson,58 59,1827,1828,False,create person + insert
+1525,Thomas Cuthbert,21,1812,1814,False,update
+1776,Thomas D. Singleton,40 41 42,1817,1819,False,update
+2739,Thomas E. Evans,65,1831,1831,False,create person + insert
+2740,Thomas English,54 55,1825,1826,False,create person + insert
+2741,Thomas Furman,58 59,1827,1828,False,create person + insert
+2742,Thomas G. Carr,62 64,1829,1830,False,create person + insert
+1470,Thomas Gaillard,7,1806,1809,False,update (was 1806-None)
+2743,Thomas Goddard,22,1812,1814,False,create person + insert
+2744,Thomas H. Edwards,52 53,1824,1825,False,create person + insert
+2745,Thomas H. Taylor,18 28 37 38 41 43 57 58 59 60 62 68 69,1810,1833,False,create person + insert
+2746,Thomas Hartley,15,1810,1811,False,create person + insert
+2747,Thomas Hopkins,49,1822,1822,False,create person + insert
+2748,Thomas Hutson,43 45 46,1819,1821,False,create person + insert
+2749,Thomas J. Goodwyn,41 43 44,1818,1820,False,create person + insert
+2750,Thomas J. Starke,68,1832,1832,False,create person + insert
+2751,Thomas Jerewen,21,1812,1815,False,create person + insert
+1518,Thomas Legare,20,1812,1814,False,update
+2752,Thomas Livingston,14,1810,1811,False,create person + insert
+2753,Thomas Loang,15,1811,1813,False,create person + insert
+2754,Thomas Lockhart,58,1827,1827,False,create person + insert
+1636,Thomas Lowry,30 39 40,1817,1818,False,update
+2755,Thomas Lyles,64 65,1830,1831,False,create person + insert
+1529,Thomas McIver,24,1813,1814,False,update
+2756,Thomas McQueen,60,1828,1828,False,create person + insert
+2757,Thomas McStuart,19,1811,1811,False,create person + insert
+2758,Thomas Mills,6,1806,1808,False,create person + insert
+2759,Thomas N. Dawkins,52 53,1824,1825,False,create person + insert
+2760,Thomas N. Waul,64 66,1830,1831,False,create person + insert
+2761,Thomas P. Falconer,41,1818,1818,False,create person + insert
+1746,Thomas P. Means,41 42,1818,1819,False,update
+2762,Thomas P. Miller,50 51,1823,1824,False,create person + insert
+2763,Thomas P. Roach,39,1817,1817,False,create person + insert
+2764,Thomas P. Withers,52 54,1824,1825,False,create person + insert
+1465,Thomas Palmer,5,1805,1808,False,update (was 1805-None)
+2765,Thomas R. C. Richardson,57 58,1826,1827,False,create person + insert
+2766,Thomas R. McFaddin,64 66 67,1830,1832,False,create person + insert
+2767,Thomas S. Fair,62 63 65,1829,1831,False,create person + insert
+1816,Thomas S. Hailes,42 43 45,1818,1820,False,update
+2768,Thomas Singelton,32,1816,1817,False,create person + insert
+2769,Thomas Smith,12,1809,1811,False,create person + insert
+2770,Thomas Stark,62 63,1829,1830,False,create person + insert
+2771,Thomas T. Sewall,70,1833,1833,False,create person + insert
+1811,Thomas T. Williamson,37 39 41,1816,1818,False,update
+2772,Thomas Tillinghast Seibles,71,1834,1834,False,create person + insert
+1714,Thomas W. Glover,37 38,1816,1817,False,update
+2773,Thomas W. Mays,53 54 55,1824,1826,False,create person + insert
+2774,Thomas W. Porcher,22 57 58,1812,1827,False,create person + insert
+2775,Thomas W. Robertson,5,1805,1808,False,create person + insert
+1696,Thomas W. Thomas,11 24 36,1808,1816,False,update
+2776,Thomas W. Trotti,66 67,1831,1832,False,create person + insert
+2777,Thomas Waties,14,1809,1812,False,create person + insert
+2778,Thomas Willison,15,1810,1813,False,create person + insert
+2779,Thomson J. Player,46 47 48,1820,1822,False,create person + insert
+2780,Timothy Center,62 63,1829,1830,False,create person + insert
+2781,Timothy P. K. Dargan,52 54 55,1824,1826,False,create person + insert
+2782,Tristram H. Thomas,16,1811,1811,False,create person + insert
+2783,Turner Bynum,52 54,1824,1825,False,create person + insert
+2784,Turner Rives,7,1805,1806,False,create person + insert
+1729,Ulric B. Clark,42,1819,1819,False,update
+2785,Ulric B. Clarke,41,1818,1818,False,create person + insert
+1662,W. A. Boykin,33,1817,1817,False,update
+2786,W. B. Richardson,51,1823,1823,False,create person + insert
+2787,W. E. McKerral,28,1817,1817,False,create person + insert
+2788,W. Ellerbe,62,1829,1829,False,create person + insert
+2789,W. F. Davie,30,1816,1818,False,create person + insert
+1652,W. Falconer,31,1816,1817,False,update
+2790,W. G. W. Wescoat,68 69,1832,1833,False,create person + insert
+1639,W. H. Bonneau,31,1815,1817,False,update
+2791,W. H. Ingleby,22,1812,1815,False,create person + insert
+2792,W. H. Nipes,29,1815,1818,False,create person + insert
+1647,W. H. Taylor,31,1816,1817,False,update
+2793,W. H. W. Brooks,69,1833,1833,False,create person + insert
+2794,W. J. Conners,30,1816,1818,False,create person + insert
+2795,W. J. Wragg,58,1827,1827,False,create person + insert
+2796,W. L. Eltroney,32,1817,1819,False,create person + insert
+2797,W. M. Armstrong,67,1832,1832,False,create person + insert
+1620,W. Porcher,32,1817,1819,False,update
+2798,W. S. Campbell,25,1815,1816,False,create person + insert
+2799,W. S. Smith,29,1814,1818,False,create person + insert
+2800,W. Webb,33,1817,1817,False,create person + insert
+463,Waddy Thompson,19,1811,1814,False,update
+465,Wade Hampton,10,1807,1808,False,insert
+1673,Wade L. Anderson,25 36,1814,1816,False,update
+2801,Waitils,47,1821,1821,False,create person + insert
+1449,Walter Crenshaw,4,1805,1807,False,update
+2802,Walter Fernandis,65 67,1831,1832,False,create person + insert
+469,Warren Davis,9,1806,1810,False,insert
+2803,Washington Couturier,47 49,1821,1822,False,create person + insert
+2804,Washington Muller,58 59,1827,1828,False,create person + insert
+2805,Washington Taylor,66,1831,1831,False,create person + insert
+2806,Washington Toney,64 66 67,1830,1832,False,create person + insert
+2807,Wesley Brannon,23,1813,1815,False,create person + insert
+474,Whiteford Smith,60 61 63,1828,1830,False,insert
+2808,Whitfield Brooks,14,1810,1812,False,create person + insert
+2809,Wiley P. Mathews,43 44,1819,1820,False,create person + insert
+2810,Willard Richardson,58 59,1827,1828,False,create person + insert
+1756,William A. Boykin,16 40 41 43 45 63 65,1811,1831,False,update
+2811,William A. Bull,12,1809,1809,False,create person + insert
+2812,William A. Ellerbe,59 60 63,1827,1830,False,create person + insert
+2813,William A. Falconer,39,1817,1817,False,create person + insert
+2814,William A. Goodwyn,35 42 43 45 46,1817,1821,False,create person + insert
+2815,William A. Mackay,64 66,1830,1831,False,create person + insert
+2816,William A. Marshall,12 18,1810,1814,False,create person + insert
+2817,William A. Mays,25,1814,1815,False,create person + insert
+2818,William A. Norris,59 60 61,1827,1829,False,create person + insert
+480,William Aiken,49 50 51 53,1822,1825,False,insert
+2819,William Arthur,11,1808,1811,False,create person + insert
+2820,William B. H. Richardson,44 45 46 53 54 56,1819,1826,False,create person + insert
+2821,William B. Means,56 57,1826,1827,False,create person + insert
+2822,William B. Nott,18,1810,1814,False,create person + insert
+2823,William B. Waties,27 37 38,1814,1817,False,create person + insert
+2824,William B. Whitaker,15,1811,1813,False,create person + insert
+2825,William Barnwell,70,1833,1833,False,create person + insert
+2826,William Bay,21,1811,1815,False,create person + insert
+2827,William Black,58 59,1827,1828,False,create person + insert
+482,William Blanding,71,1834,1834,False,insert
+2828,William Bones Crawford,59 61,1828,1829,False,create person + insert
+2829,William Bonneau,38 39,1816,1817,False,create person + insert
+2830,William Brainthwaite,49,1822,1822,False,create person + insert
+2831,William Brantley,6,1806,1808,False,create person + insert
+2832,William Breckell,20,1811,1814,False,create person + insert
+2833,William Brockell,16,1811,1813,False,create person + insert
+2834,William Butler,10,1807,1810,False,create person + insert
+1784,William C. Baynard,29 37 39 40,1815,1818,False,update
+2835,William C. Blasingame,37 38,1816,1817,False,create person + insert
+484,William C. Preston,14,1809,1812,False,insert
+2836,William C. Young,18,1811,1811,False,create person + insert
+2837,William Cain,14,1810,1812,False,create person + insert
+2838,William Carlisle Beatty,47 48,1821,1822,False,create person + insert
+1178,William Carson,35 42,1817,1818,False,update
+2839,William Claiborne Clifton,45 47 48,1820,1822,False,create person + insert
+2840,William Clarkson,52 54 55,1824,1826,False,create person + insert
+2841,William Currell,65 67,1831,1832,False,create person + insert
+2842,William Dubois,6,1805,1808,False,create person + insert
+2843,William E. Boyd,54 56,1825,1826,False,create person + insert
+2844,William E. Martin,68 69 71,1832,1834,False,create person + insert
+2845,William F. Baker,22,1813,1815,False,create person + insert
+2846,William F. Colcock,47 49 50,1821,1823,False,create person + insert
+2847,William F. Davie,39 40,1817,1818,False,create person + insert
+2848,William F. English,52 54 55,1824,1826,False,create person + insert
+2849,William F. Percival,64 66 67,1830,1832,False,create person + insert
+2850,William Fleming,13,1809,1812,False,create person + insert
+2851,William Francis Daniel,71,1834,1834,False,create person + insert
+2852,William G. Adams,54 56 57,1825,1827,False,create person + insert
+2853,William G. Ramsay,59 60 61,1827,1829,False,create person + insert
+2854,William G. Webb,41 43 44,1818,1820,False,create person + insert
+2855,William Gill,10,1808,1810,False,create person + insert
+2856,William Goodwin,5,1805,1808,False,create person + insert
+2857,William H. Cannon,66,1831,1831,False,create person + insert
+2858,William H. Gist,49 57 58,1822,1827,False,create person + insert
+2859,William H. H. Hay,14 46 47,1810,1821,False,create person + insert
+2860,William H. Harrison,64 66 67,1830,1832,False,create person + insert
+2861,William H. Hutson,64 65,1830,1831,False,create person + insert
+2862,William H. James,23,1813,1815,False,create person + insert
+2863,William H. McCalla,23,1813,1815,False,create person + insert
+1809,William H. Snipes,37 39 40,1816,1818,False,update
+1451,William Harper,4 6,1805,1808,False,update
+2864,William Hemingway,58 59,1827,1828,False,create person + insert
+2865,William Holmes Ellison,52 54 55,1824,1826,False,create person + insert
+2866,William Hopkins,49,1822,1822,False,create person + insert
+2867,William Hurd,18,1810,1810,False,create person + insert
+1689,William Irby,36,1816,1816,False,update
+2868,William J. De Witt,57,1826,1826,False,create person + insert
+2869,William J. Edings,27,1814,1816,False,create person + insert
+2870,William J. Grayson,7,1807,1809,False,create person + insert
+2871,William J. Hard,57 58 59 61,1826,1829,False,create person + insert
+2872,William J. Holmes,57,1826,1826,False,create person + insert
+1750,William J. Nuckolls,44,1820,1820,False,update
+2873,William J. Wragg,56,1826,1826,False,create person + insert
+2874,William John Alston,47 48 65,1821,1831,False,create person + insert
+2875,William Johnston,14,1810,1812,False,create person + insert
+1755,William Johnston Bobo,33 41 43,1817,1819,False,update
+717,William Jones,6,1806,1808,False,insert
+2876,William Jones Boone,58 59 61,1827,1829,False,create person + insert
+1730,William K. Clowney,41 42,1818,1819,False,update
+2877,William K. Davis,5 55 56 57,1805,1827,False,create person + insert
+2878,William L. Kirkland,19,1811,1814,False,create person + insert
+2879,William L. Lewis,45,1820,1820,False,create person + insert
+2880,William Lang,9,1807,1807,False,create person + insert
+2881,William Latta,64 65,1830,1831,False,create person + insert
+1799,William Ley,39 40,1817,1818,False,update
+512,William Lowndes,54 55,1825,1826,False,insert
+2882,William Lowry,10,1809,1810,False,create person + insert
+2883,William M. Capers,5 7 55 57,1805,1827,False,create person + insert
+2884,William M. Lee,21 29 37 49 50,1811,1823,False,create person + insert
+2885,William M. McElwee,44,1820,1820,False,create person + insert
+2886,William M. Myers,46 51 52,1820,1824,False,create person + insert
+2887,William M. Porcher,41 42 64 65,1818,1831,False,create person + insert
+2888,William Mayrant,12,1810,1811,False,create person + insert
+2889,William McCreary,66,1831,1831,False,create person + insert
+2890,William McKenzie,6,1805,1808,False,create person + insert
+1373,William McWillie,28 37 38,1815,1817,False,update
+2891,William Milliken,60,1828,1828,False,create person + insert
+2892,William N. McDonald,22,1812,1815,False,create person + insert
+2893,William N. Park,60 61 63,1828,1830,False,create person + insert
+2894,William Neisbit,5,1805,1808,False,create person + insert
+2895,William Nuckols,43,1819,1819,False,create person + insert
+2896,William Oswald,56 58,1826,1827,False,create person + insert
+1693,William Overstreet,36,1816,1816,False,update
+2897,William P. Sterrett,43 44,1819,1820,False,create person + insert
+2898,William Pinckney,54 55,1825,1826,False,create person + insert
+2899,William R. Canon,56 57,1826,1827,False,create person + insert
+2900,William R. Hagood,64 65,1830,1831,False,create person + insert
+2901,William R. J. Prior,47 48,1821,1822,False,create person + insert
+2902,William R. Patton,60 61,1828,1829,False,create person + insert
+2903,William R. Waring,5,1805,1808,False,create person + insert
+2904,William Roberts,60 61,1828,1829,False,create person + insert
+2905,William Roper,69 71,1833,1834,False,create person + insert
+2906,William Rowe,60 61 63,1828,1830,False,create person + insert
+2907,William S. Burgess,54 56 57,1825,1827,False,create person + insert
+2908,William S. Campbell,36,1816,1816,False,create person + insert
+2909,William S. Connors,39 40,1817,1818,False,create person + insert
+2910,William S. Gantt,46 47 48,1820,1822,False,create person + insert
+2911,William S. Grant,46,1820,1820,False,create person + insert
+2912,William S. Grantt,47 48,1821,1822,False,create person + insert
+2913,William S. Lyles,64 66 67,1830,1832,False,create person + insert
+2914,William S. Partridge,24 44,1813,1819,False,create person + insert
+2915,William S. Price,38 39,1816,1817,False,create person + insert
+2916,William S. Smith,22 37 39 40 55 56 58,1812,1827,False,create person + insert
+2917,William S. Taylor,8 40 41 43 51 53 54 56,1807,1826,False,create person + insert
+2918,William S. Wilson,24 36 46 47 48,1814,1822,False,create person + insert
+2919,William Sams,31 38 39,1816,1817,False,create person + insert
+2920,William Seabrook,27 37,1814,1816,False,create person + insert
+2921,William Smith Jenkins,71,1834,1834,False,create person + insert
+2922,William Vereen,46,1820,1820,False,create person + insert
+2923,William Vernon,15,1810,1813,False,create person + insert
+2924,William W. Cakers,56,1826,1826,False,create person + insert
+2925,William W. H. Charles,50 52 53,1823,1825,False,create person + insert
+2926,William Wade,9,1806,1810,False,create person + insert
+2927,William Weston,18,1811,1814,False,create person + insert
+999,William Whaley,71,1834,1834,False,insert
+2928,William Woodward,12,1809,1810,False,create person + insert
+2929,Willis Crenshaw,14,1810,1812,False,create person + insert
+2930,Willis Foster,49 50 51,1822,1824,False,create person + insert
+2931,Wilmot R. Gibbes,51 52,1823,1824,False,create person + insert
+2932,Wyatt Stark,9,1807,1810,False,create person + insert
+2933,Z. Rudulph,29,1814,1818,False,create person + insert
+2934,Zachariah Herndon,16,1811,1811,False,create person + insert
