@@ -2,8 +2,8 @@
 
 Numbers (all computed from the database and the entry sheet):
   register students  = distinct names in scc_date_entry_sheet_tcl.csv
-  matched            = people with SCC dates who also have data in the DB beyond the register
-                       (positions, relationships, correspondence, other organizations or other sources)
+  matched            = people in the DB with SCC dates (the DB's SCC list now holds only people who
+                       were in the database before the register was loaded)
   unionists / nullifiers = people with at least one position whose label contains
                        'unionist' / 'nullifier' (position_label_code)
 
@@ -12,13 +12,13 @@ Output: data/scc_register_summary.html  (open in any browser; no external depend
 """
 import csv
 import sqlite3
+from html import escape
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "unionism.db"
 SHEET = ROOT / "data" / "staging" / "scc_ocr" / "scc_date_entry_sheet_tcl.csv"
 OUT = ROOT / "data" / "scc_register_summary.html"
-REGISTER_SOURCE_ID = 22
 
 db = sqlite3.connect(DB)
 
@@ -32,18 +32,7 @@ scc = {r[0] for r in db.execute(
     "SELECT person_id FROM person_organization WHERE organization_id = 2 AND date_start IS NOT NULL")}
 
 
-def has_other_data(pid):
-    checks = [
-        ("SELECT COUNT(*) FROM positions WHERE person_id = ?", (pid,)),
-        ("SELECT COUNT(*) FROM relationships WHERE person_high_id = ? OR person_low_id = ?", (pid, pid)),
-        ("SELECT COUNT(*) FROM correspondence WHERE sender_id = ? OR recipient_id = ?", (pid, pid)),
-        ("SELECT COUNT(*) FROM person_organization WHERE person_id = ? AND organization_id <> 2", (pid,)),
-        ("SELECT COUNT(*) FROM person_sources WHERE person_id = ? AND source_id <> ?", (pid, REGISTER_SOURCE_ID)),
-    ]
-    return any(db.execute(sql, args).fetchone()[0] > 0 for sql, args in checks)
-
-
-matched = {p for p in scc if has_other_data(p)}
+matched = set(scc)
 labels = db.execute("SELECT person_id, position_label_code FROM positions").fetchall()
 unionists = {p for p, l in labels if "unionist" in l}
 nullifiers = {p for p, l in labels if "nullifier" in l}
@@ -70,10 +59,35 @@ def bar_rows(items, x0, width, scale_max, y0, row_h=46, bar_h=26):
     for i, (label, value, color) in enumerate(items):
         y = y0 + i * row_h
         w = max(2, width * value / scale_max)
+        pct = 100 * value / scale_max
         out.append(f'<text x="{x0 - 12}" y="{y + 18}" text-anchor="end" class="lbl">{label}</text>')
         out.append(f'<rect x="{x0}" y="{y}" width="{w:.1f}" height="{bar_h}" rx="3" fill="{color}"/>')
-        out.append(f'<text x="{x0 + w + 8}" y="{y + 18}" class="val">{value:,}</text>')
+        out.append(
+            f'<text x="{x0 + w + 8}" y="{y + 18}" class="val">{value:,} '
+            f'<tspan class="pct">({pct:.1f}%)</tspan></text>')
     return "\n".join(out)
+
+
+names = dict(db.execute("SELECT person_id, full_name FROM people"))
+spans = {r[0]: (r[1], r[2]) for r in db.execute(
+    "SELECT person_id, date_start, date_end FROM person_organization "
+    "WHERE organization_id = 2 AND date_start IS NOT NULL")}
+
+
+def display(name):
+    return name.title() if name.isupper() else name
+
+
+table_rows = []
+for pid in sorted(matched, key=lambda p: display(names[p]).split()[-1].lower()):
+    stance = [s for s, group in (("Unionist", unionists), ("Nullifier", nullifiers)) if pid in group]
+    start, end = spans[pid]
+    years_txt = start if not end or end == start else f"{start}&ndash;{end}"
+    cls = "both" if len(stance) == 2 else (stance[0].lower() if stance else "none")
+    table_rows.append(
+        f'<tr class="{cls}"><td>{escape(display(names[pid]))}</td><td>{years_txt}</td>'
+        f'<td>{" / ".join(stance) or "&mdash;"}</td></tr>')
+match_table = "\n".join(table_rows)
 
 
 panel1 = bar_rows(
@@ -101,6 +115,13 @@ html = f"""<!DOCTYPE html>
  .sub {{ color: #666; font-size: 13px; margin-bottom: 8px; }}
  .lbl {{ font-size: 14px; fill: #333; }}
  .val {{ font-size: 14px; font-weight: 600; fill: #222; }}
+ .pct {{ font-weight: 400; fill: #555; }}
+ table {{ border-collapse: collapse; font-size: 13px; width: 100%; margin-top: 8px; }}
+ th, td {{ text-align: left; padding: 4px 10px; border-bottom: 1px solid #e4e4e4; }}
+ th {{ color: #555; font-weight: 600; }}
+ tr.unionist td:last-child {{ color: #2e7d4f; font-weight: 600; }}
+ tr.nullifier td:last-child {{ color: #b5483a; font-weight: 600; }}
+ tr.both td:last-child {{ color: #7a5aa6; font-weight: 600; }}
  .note {{ font-size: 12.5px; color: #555; line-height: 1.5; margin-top: 22px; }}
 </style></head><body>
 <h1>South Carolina College student register vs. the unionism database</h1>
@@ -112,11 +133,17 @@ html = f"""<!DOCTYPE html>
 <h2>Of the {n['matched']} matched people</h2>
 <svg viewBox="0 0 900 250" width="100%">{panel2}</svg>
 
+<h2>The {n['matched']} matches</h2>
+<table>
+<tr><th>Name</th><th>SCC years</th><th>Stance in DB</th></tr>
+{match_table}
+</table>
+
 <p class="note">
  Across the whole database there are {n['uni_all']} people with a unionist position and {n['nul_all']} with a nullifier position.
  Of those, {n['uni']} unionists ({pct_uni:.0f}%) and {n['nul']} nullifiers ({pct_nul:.0f}%) appear in the register.<br>
- <b>Matched</b> = a person with register dates who also has other data in the database (a position, relationship,
- correspondence, another organization or another source). <b>Unionist / nullifier</b> = at least one position whose
+ <b>Matched</b> = a register name that was already a person in the database before the register was loaded
+ (the SCC list in the database holds only these people). <b>Unionist / nullifier</b> = at least one position whose
  label contains &ldquo;unionist&rdquo; or &ldquo;nullifier&rdquo; (all label variants, any issue).<br>
  Register names were read from page images and have not been verified; spelling variants were merged by rule, so
  the register total is approximate.
